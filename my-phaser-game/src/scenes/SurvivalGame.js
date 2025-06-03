@@ -2,23 +2,26 @@ import Phaser from 'phaser';
 
 export class SurvivalGame extends Phaser.Scene {
     constructor() {
-        super('SurvivalGame'); // Nome da cena
+        super('SurvivalGame');
     }
 
     create() {
-        // Cria o jogador como um retângulo verde no centro da tela
+        // Cria o jogador no centro
         this.player = this.add.rectangle(512, 384, 40, 40, 0x00ff00);
-        this.physics.add.existing(this.player); // Ativa física no jogador
-        this.player.body.setCollideWorldBounds(true); // Impede que o jogador saia da tela
+        this.physics.add.existing(this.player);
+        this.player.body.setCollideWorldBounds(true);
 
-        // Define as teclas de controle (setas e WASD)
+        // Teclas de movimentação
         this.cursors = this.input.keyboard.createCursorKeys();
-        this.keys = this.input.keyboard.addKeys('W,A,S,D');
+        this.keys = this.input.keyboard.addKeys('W,A,S,D,SPACE');
 
-        // Grupo que armazenará os zumbis
+        // Grupo de zumbis
         this.zombies = this.physics.add.group();
 
-        // Gera um novo zumbi a cada 2 segundos
+        // Grupo de tiros
+        this.bullets = this.physics.add.group();
+
+        // Geração de zumbis a cada 2 segundos
         this.time.addEvent({
             delay: 2000,
             callback: this.spawnZombie,
@@ -26,54 +29,86 @@ export class SurvivalGame extends Phaser.Scene {
             loop: true
         });
 
-        // Se um zumbi encostar no jogador → game over
+        // Colisão de zumbi com jogador → game over
         this.physics.add.overlap(this.zombies, this.player, () => {
             this.scene.start('GameOver');
         });
+
+        // Colisão de tiros com zumbis
+        this.physics.add.overlap(this.bullets, this.zombies, this.hitZombie, null, this);
     }
 
     update() {
-        // Atualiza o movimento do jogador
         this.handleMovement();
 
-        // Faz cada zumbi seguir o jogador
+        // Faz zumbis seguirem o jogador
         this.zombies.children.iterate((zombie) => {
-            this.physics.moveToObject(zombie, this.player, 60); // velocidade 60
+            this.physics.moveToObject(zombie, this.player, 60);
         });
+
+        // Atirar quando espaço for pressionado
+        if (Phaser.Input.Keyboard.JustDown(this.keys.SPACE)) {
+            this.shootBullet();
+        }
     }
 
     handleMovement() {
-        const speed = 200; // Velocidade do jogador
+        const speed = 200;
         const body = this.player.body;
-
-        // Zera a velocidade antes de movimentar
         body.setVelocity(0);
 
-        // Movimento horizontal
         if (this.cursors.left.isDown || this.keys.A.isDown) body.setVelocityX(-speed);
         else if (this.cursors.right.isDown || this.keys.D.isDown) body.setVelocityX(speed);
 
-        // Movimento vertical
         if (this.cursors.up.isDown || this.keys.W.isDown) body.setVelocityY(-speed);
         else if (this.cursors.down.isDown || this.keys.S.isDown) body.setVelocityY(speed);
     }
 
+    shootBullet() {
+        // Cria uma bala na posição do jogador
+        const bullet = this.add.rectangle(this.player.x, this.player.y, 10, 5, 0xffff00);
+        this.physics.add.existing(bullet);
+        this.bullets.add(bullet);
+
+        bullet.body.setCollideWorldBounds(true);
+        bullet.body.onWorldBounds = true;
+
+        // Calcula direção do cursor
+        const pointer = this.input.activePointer;
+        const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, pointer.worldX, pointer.worldY);
+        const speed = 500;
+
+        this.physics.velocityFromRotation(angle, speed, bullet.body.velocity);
+
+        // Remove a bala após 2 segundos
+        this.time.delayedCall(2000, () => bullet.destroy());
+    }
+
     spawnZombie() {
-        // Define de qual lado da tela o zumbi vai aparecer
         const side = Phaser.Math.Between(0, 3);
         let x, y;
 
-        // Define a posição inicial do zumbi com base no lado
         switch (side) {
-            case 0: x = Phaser.Math.Between(0, 1024); y = -20; break; // Topo
-            case 1: x = Phaser.Math.Between(0, 1024); y = 788; break; // Base
-            case 2: x = -20; y = Phaser.Math.Between(0, 768); break; // Esquerda
-            case 3: x = 1044; y = Phaser.Math.Between(0, 768); break; // Direita
+            case 0: x = Phaser.Math.Between(0, 1024); y = -20; break;
+            case 1: x = Phaser.Math.Between(0, 1024); y = 788; break;
+            case 2: x = -20; y = Phaser.Math.Between(0, 768); break;
+            case 3: x = 1044; y = Phaser.Math.Between(0, 768); break;
         }
 
-        // Cria o zumbi como retângulo vermelho
+        // Cria zumbi com 3 de vida
         const zombie = this.add.rectangle(x, y, 30, 30, 0xff0000);
-        this.physics.add.existing(zombie); // Ativa física
-        this.zombies.add(zombie); // Adiciona ao grupo de zumbis
+        this.physics.add.existing(zombie);
+        zombie.hp = 3; // Vida do zumbi
+        this.zombies.add(zombie);
+    }
+
+    hitZombie(bullet, zombie) {
+        bullet.destroy(); // Remove o tiro
+        zombie.hp--;      // Zumbi toma dano
+
+        // Se vida zerar, mata o zumbi
+        if (zombie.hp <= 0) {
+            zombie.destroy();
+        }
     }
 }
