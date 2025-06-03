@@ -1,45 +1,28 @@
 import { Scene } from 'phaser';
 
-export class MainMenu extends Scene
-{
-    constructor ()
-    {
-        super('MainMenu');
+export class MainMenu extends Scene {
+    constructor() {
+        super('MainMenu'); // Nome único da cena
     }
 
-    create ()
-    {
-        //  Get the current highscore from the registry
-        const score = this.registry.get('highscore');
+    create() {
+        // Adiciona o título centralizado na tela
+        this.add.text(512, 200, 'Z Containment', {
+            fontSize: '48px',
+            color: '#ffffff'
+        }).setOrigin(0.5);
 
-        const textStyle = { fontFamily: 'Arial Black', fontSize: 38, color: '#ffffff', stroke: '#000000', strokeThickness: 8 };
+        // Cria o botão "Jogar"
+        const playButton = this.add.text(512, 400, '▶ Jogar', {
+            fontSize: '32px',
+            backgroundColor: '#00aa00',
+            color: '#ffffff',
+            padding: { x: 20, y: 10 }
+        }).setOrigin(0.5).setInteractive(); // Deixa o texto clicável
 
-        this.add.image(512, 384, 'background');
-
-        const logo = this.add.image(512, -270, 'logo');
-
-        this.tweens.add({
-            targets: logo,
-            y: 270,
-            duration: 1000,
-            ease: 'Bounce'
-        });
-
-        this.add.text(32, 32, `High Score: ${score}`, textStyle);
-
-        const instructions = [
-            'How many coins can you',
-            'click in 10 seconds?',
-            '',
-            'Click to Start!'
-        ]
-
-        this.add.text(512, 550, instructions, textStyle).setAlign('center').setOrigin(0.5);
-
-        this.input.once('pointerdown', () => {
-
-            this.scene.start('ClickerGame');
-
+        // Quando o botão for clicado, inicia a cena do jogo
+        playButton.on('pointerdown', () => {
+            this.scene.start('SurvivalGame');
         });
     }
 }

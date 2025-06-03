@@ -1,27 +1,28 @@
 import { Scene } from 'phaser';
 
-export class GameOver extends Scene
-{
-    constructor ()
-    {
-        super('GameOver');
+export class GameOver extends Scene {
+    constructor() {
+        super('GameOver'); // Nome da cena
     }
 
-    create ()
-    {
-        //  Get the current highscore from the registry
-        const score = this.registry.get('highscore');
+    create() {
+        // Exibe a mensagem "Game Over"
+        this.add.text(512, 250, 'Game Over', {
+            fontSize: '48px',
+            color: '#ff0000'
+        }).setOrigin(0.5);
 
-        const textStyle = { fontFamily: 'Arial Black', fontSize: 64, color: '#ffffff', stroke: '#000000', strokeThickness: 8 };
+        // Botão para voltar ao menu
+        const retryButton = this.add.text(512, 400, '↻ Tentar Novamente', {
+            fontSize: '28px',
+            backgroundColor: '#aa0000',
+            color: '#ffffff',
+            padding: { x: 20, y: 10 }
+        }).setOrigin(0.5).setInteractive();
 
-        this.add.image(512, 384, 'background');
-
-        this.add.text(512, 300, `Game Over\n\nHigh Score: ${score}`, textStyle).setAlign('center').setOrigin(0.5);
-
-        this.input.once('pointerdown', () => {
-
+        // Ao clicar no botão, volta para o menu principal
+        retryButton.on('pointerdown', () => {
             this.scene.start('MainMenu');
-
         });
     }
 }
