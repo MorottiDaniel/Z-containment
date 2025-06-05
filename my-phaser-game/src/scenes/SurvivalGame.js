@@ -3,11 +3,14 @@ import Phaser from 'phaser';
 export class SurvivalGame extends Phaser.Scene {
     constructor() {
         super('SurvivalGame');
-        this.playerHp = 100;
+        this.playerMaxHp = 3;  // Máximo de hits (vidas)
+        this.playerHp = this.playerMaxHp;  // Vida inicial do personagem
         this.score = 0;
         this.round = 1;
         this.zombieSpeed = 150;
         this.zombieHp = 3;
+        this.invulnerable = false;  // Flag de invulnerabilidade
+        this.invulnerableTime = 1000; // Tempo de invulnerabilidade (1 segundo)
     }
 
     create() {
@@ -36,7 +39,7 @@ export class SurvivalGame extends Phaser.Scene {
         this.player = this.add.rectangle(1000, 1000, 40, 40, 0x00ff00);
         this.physics.add.existing(this.player);
         this.player.body.setCollideWorldBounds(true);
-        this.playerHp = 100;
+        this.playerHp = this.playerMaxHp;  // Reseta a vida do personagem
     }
 
     createInputs() {
@@ -73,18 +76,15 @@ export class SurvivalGame extends Phaser.Scene {
     }
 
     updateUI() {
-        this.healthBar.width = Math.max(0, this.playerHp);
+        // Atualiza a largura da barra de vida com base na vida atual do jogador
+        this.healthBar.width = (this.playerHp / this.playerMaxHp) * 100;  
         this.scoreText.setText('Pontos: ' + this.score);
         this.roundText.setText('Round: ' + this.round);
     }
 
     setupCollisions() {
-        this.physics.add.overlap(this.zombies, this.player, () => {
-            this.playerHp -= 20;
-            if (this.playerHp <= 0) {
-                this.scene.start('GameOver');
-            }
-        });
+        // Adiciona a colisão entre zumbis e jogador
+        this.physics.add.overlap(this.zombies, this.player, this.handlePlayerHit, null, this);
 
         this.physics.add.overlap(this.bullets, this.zombies, this.hitZombie, null, this);
         this.physics.add.collider(this.player, this.obstacles);
@@ -161,6 +161,20 @@ export class SurvivalGame extends Phaser.Scene {
         this.physics.add.existing(zombie);
         zombie.hp = this.zombieHp;
         this.zombies.add(zombie);
+    }
+
+    handlePlayerHit(player, zombie) {
+        if (this.invulnerable) return;  // Ignora colisões se o personagem for invulnerável
+
+        this.playerHp--;  // Diminui a vida do personagem
+        this.invulnerable = true;  // Ativa a invulnerabilidade
+        this.time.delayedCall(this.invulnerableTime, () => {
+            this.invulnerable = false;  // Desativa a invulnerabilidade após o tempo
+        });
+
+        if (this.playerHp <= 0) {
+            this.scene.start('GameOver');  // Game Over se a vida for 0
+        }
     }
 
     hitZombie(bullet, zombie) {
