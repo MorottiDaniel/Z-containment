@@ -24,5 +24,9 @@ export class MainMenu extends Scene {
         playButton.on('pointerdown', () => {
             this.scene.start('SurvivalGame');
         });
+        // this.sound.play('backgroundMusic', {
+        //     loop: true,  // Loop da Musica
+        //     volume: 0.5  // Volume entre 0 e 1
+        // });
     }
 }
