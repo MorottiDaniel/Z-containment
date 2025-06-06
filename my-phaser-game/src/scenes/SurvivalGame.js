@@ -7,8 +7,8 @@ export class SurvivalGame extends Phaser.Scene {
         this.playerHp = this.playerMaxHp;  // Vida inicial do personagem
         this.score = 0;
         this.round = 1;
-        this.zombieSpeed = 150;
-        this.zombieHp = 3;
+        this.zombieBaseSpeed = 150;  // Velocidade base dos zumbis
+        this.zombieBaseHp = 3;  // HP base dos zumbis
         this.invulnerable = false;  // Flag de invulnerabilidade
         this.invulnerableTime = 1000; // Tempo de invulnerabilidade (1 segundo)
     }
@@ -20,8 +20,8 @@ export class SurvivalGame extends Phaser.Scene {
         this.createObstacles();
         this.createUI();
         this.setupCollisions();
-        this.startZombieSpawner();
         this.setupMouseShoot();
+        this.startZombieSpawner();
         this.startRoundTimer();
 
         this.physics.world.setBounds(0, 0, 2000, 2000);
@@ -76,16 +76,13 @@ export class SurvivalGame extends Phaser.Scene {
     }
 
     updateUI() {
-        // Atualiza a largura da barra de vida com base na vida atual do jogador
         this.healthBar.width = (this.playerHp / this.playerMaxHp) * 100;  
         this.scoreText.setText('Pontos: ' + this.score);
         this.roundText.setText('Round: ' + this.round);
     }
 
     setupCollisions() {
-        // Adiciona a colisão entre zumbis e jogador
         this.physics.add.overlap(this.zombies, this.player, this.handlePlayerHit, null, this);
-
         this.physics.add.overlap(this.bullets, this.zombies, this.hitZombie, null, this);
         this.physics.add.collider(this.player, this.obstacles);
         this.physics.add.collider(this.zombies, this.obstacles);
@@ -112,7 +109,36 @@ export class SurvivalGame extends Phaser.Scene {
 
     moveZombiesTowardsPlayer() {
         this.zombies.children.iterate(zombie => {
-            this.physics.moveToObject(zombie, this.player, this.zombieSpeed);
+            if (zombie.type === 'smart') {
+                // Pathfinding simples com raycasting
+                const angleToPlayer = Phaser.Math.Angle.Between(zombie.x, zombie.y, this.player.x, this.player.y);
+                const distanceToPlayer = Phaser.Math.Distance.Between(zombie.x, zombie.y, this.player.x, this.player.y);
+                
+                // Cria um raycast para verificar obstáculos
+                const ray = new Phaser.Geom.Line(
+                    zombie.x, 
+                    zombie.y, 
+                    zombie.x + Math.cos(angleToPlayer) * distanceToPlayer, 
+                    zombie.y + Math.sin(angleToPlayer) * distanceToPlayer
+                );
+                let hit = false;
+                this.obstacles.children.iterate(obstacle => {
+                    if (Phaser.Geom.Intersects.LineToRectangle(ray, obstacle.getBounds())) {
+                        hit = true;
+                        return false; // Para a iteração
+                    }
+                });
+
+                if (hit) {
+                    // Desvia movendo-se em uma direção perpendicular
+                    const perpendicularAngle = angleToPlayer + Math.PI / 2;
+                    this.physics.velocityFromRotation(perpendicularAngle, zombie.speed, zombie.body.velocity);
+                } else {
+                    this.physics.moveToObject(zombie, this.player, zombie.speed);
+                }
+            } else {
+                this.physics.moveToObject(zombie, this.player, zombie.speed);
+            }
         });
     }
 
@@ -135,14 +161,39 @@ export class SurvivalGame extends Phaser.Scene {
 
     startZombieSpawner() {
         this.zombieTimer = this.time.addEvent({
-            delay: 2000,
-            callback: this.spawnZombie,
+            delay: 5000, // Intervalo maior para ondas
+            callback: () => {
+                const zombiesInWave = Phaser.Math.Between(3, 6); // 3 a 6 zumbis por onda
+                for (let i = 0; i < zombiesInWave; i++) {
+                    this.time.delayedCall(i * 500, this.spawnZombie, [], this);
+                }
+            },
             callbackScope: this,
             loop: true
         });
     }
 
     spawnZombie() {
+        const types = ['fast', 'tank', 'smart'];
+        const type = types[Phaser.Math.Between(0, types.length - 1)];
+        let zombieSpeed = this.zombieBaseSpeed;
+        let zombieHp = this.zombieBaseHp;
+        let color = 0xff0000; // Vermelho (padrão)
+
+        if (type === 'fast') {
+            zombieSpeed *= 1.5; // 50% mais rápido
+            zombieHp = 1; // Menos resistente
+            color = 0xffa500; // Laranja
+        } else if (type === 'tank') {
+            zombieSpeed *= 0.7; // 30% mais lento
+            zombieHp = 5; // Mais resistente
+            color = 0x800080; // Roxo
+        } else if (type === 'smart') {
+            zombieSpeed *= 1.2; // 20% mais rápido
+            zombieHp = 3; // HP padrão
+            color = 0x00ffff; // Ciano
+        }
+
         const margin = 100;
         const worldWidth = 2000;
         const worldHeight = 2000;
@@ -157,32 +208,63 @@ export class SurvivalGame extends Phaser.Scene {
             case 3: x = worldWidth + margin; y = Phaser.Math.Between(0, worldHeight); break;
         }
 
-        const zombie = this.add.rectangle(x, y, 30, 30, 0xff0000);
+        const zombie = this.add.rectangle(x, y, 30, 30, color);
         this.physics.add.existing(zombie);
-        zombie.hp = this.zombieHp;
+        zombie.hp = zombieHp;
+        zombie.speed = zombieSpeed;
+        zombie.type = type;
         this.zombies.add(zombie);
     }
 
-    handlePlayerHit(player, zombie) {
-        if (this.invulnerable) return;  // Ignora colisões se o personagem for invulnerável
+    spawnBossZombie() {
+        const margin = 100;
+        const worldWidth = 2000;
+        const worldHeight = 2000;
 
-        this.playerHp--;  // Diminui a vida do personagem
-        this.invulnerable = true;  // Ativa a invulnerabilidade
+        const side = Phaser.Math.Between(0, 3);
+        let x, y;
+
+        switch (side) {
+            case 0: x = Phaser.Math.Between(0, worldWidth); y = -margin; break;
+            case 1: x = Phaser.Math.Between(0, worldWidth); y = worldHeight + margin; break;
+            case 2: x = -margin; y = Phaser.Math.Between(0, worldHeight); break;
+            case 3: x = worldWidth + margin; y = Phaser.Math.Between(0, worldHeight); break;
+        }
+
+        const boss = this.add.rectangle(x, y, 50, 50, 0x0000ff); // Azul para o chefão
+        this.physics.add.existing(boss);
+        boss.hp = this.zombieBaseHp * 3; // 3x o HP base
+        boss.speed = this.zombieBaseSpeed * 0.8; // 20% mais lento
+        boss.type = 'boss';
+        this.zombies.add(boss);
+    }
+
+    handlePlayerHit(player, zombie) {
+        if (this.invulnerable) return;
+
+        this.playerHp--;
+        this.invulnerable = true;
         this.time.delayedCall(this.invulnerableTime, () => {
-            this.invulnerable = false;  // Desativa a invulnerabilidade após o tempo
+            this.invulnerable = false;
         });
 
         if (this.playerHp <= 0) {
-            this.scene.start('GameOver');  // Game Over se a vida for 0
+            this.scene.start('GameOver');
         }
     }
 
     hitZombie(bullet, zombie) {
         bullet.destroy();
         zombie.hp--;
+        this.tweens.add({
+            targets: zombie,
+            alpha: 0.5,
+            duration: 100,
+            yoyo: true
+        });
         if (zombie.hp <= 0) {
             zombie.destroy();
-            this.score += 10;
+            this.score += zombie.type === 'boss' ? 50 : 10; // 50 pontos para chefão
         }
     }
 
@@ -191,8 +273,11 @@ export class SurvivalGame extends Phaser.Scene {
             delay: 15000, // A cada 15 segundos
             callback: () => {
                 this.round++;
-                this.zombieHp += 1;
-                this.zombieSpeed += 10;
+                this.zombieBaseHp += 1;
+                this.zombieBaseSpeed += 10;
+                if (this.round % 3 === 0) {
+                    this.spawnBossZombie(); // Spawna chefão a cada 3 rounds
+                }
             },
             callbackScope: this,
             loop: true
