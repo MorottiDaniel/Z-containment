@@ -29,7 +29,9 @@ const config = {
     scene: [
         MainMenu,       // Cena do menu principal
         SurvivalGame,   // Cena do jogo principal
-        GameOver        // Cena de fim de jogo
+        GameOver,        // Cena de fim de jogo
+        Boot,
+        Preloader
     ]
 };
 

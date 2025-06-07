@@ -31,17 +31,14 @@ export class Preloader extends Scene
     {
         //  Load the assets for the game - Replace with the path to your own assets
         this.load.setPath('assets');
-
-        this.load.image('background', 'background.png');
-        this.load.image('logo', 'cc-logo.png');
-        this.load.atlas('coin', 'coin.png', 'coin.json');
+        this.load.audio('backgroundMusic', 'assets/audio/mscMenu.mp3');
     }
 
     create ()
     {
         //  When all the assets have loaded, it's often worth creating global objects here that the rest of the game can use.
         //  For example, we will define our 'coin' animation here, so we can use it in other scenes:
-
+        this.scene.start('MainMenu');
         this.anims.create({
             key: 'rotate',
             frames: this.anims.generateFrameNames('coin', { prefix: 'coin_', start: 1, end: 7, zeroPad: 2 }),
