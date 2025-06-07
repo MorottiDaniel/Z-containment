@@ -1,32 +1,48 @@
-import { Scene } from 'phaser';
+import { Scene } from "phaser";
 
 export class MainMenu extends Scene {
     constructor() {
-        super('MainMenu'); // Nome único da cena
+        super("MainMenu");
     }
 
     create() {
-        // Adiciona o título centralizado na tela
-        this.add.text(512, 200, 'Z Containment', {
-            fontSize: '48px',
-            color: '#ffffff'
-        }).setOrigin(0.5);
+        
+        this.add.image(512, 384, "menu-background").setDisplaySize(1024, 768);
+        
+        this.cameras.main.setBackgroundColor("#1a1a1a");
 
-        // Cria o botão "Jogar"
-        const playButton = this.add.text(512, 400, '▶ Jogar', {
-            fontSize: '32px',
-            backgroundColor: '#00aa00',
-            color: '#ffffff',
-            padding: { x: 20, y: 10 }
-        }).setOrigin(0.5).setInteractive(); // Deixa o texto clicável
+        // Botão Jogar
+        const playButton = this.add
+            .text(512, 680, "▶ START", {
+                fontSize: "48px",
+                fontFamily: "Pixellari",
+                backgroundColor: "#007700",
+                color: "#fff",
+                padding: { x: 30, y: 20 },
+                align: "center",
+                fixedWidth: 400,
+            })
+            .setOrigin(0.5)
+            .setInteractive();
 
-        // Quando o botão for clicado, inicia a cena do jogo
-        playButton.on('pointerdown', () => {
+        // Efeitos de hover
+        playButton.on("pointerover", () => {
+            playButton.setStyle({ backgroundColor: "#00aa00" }); // Verde claro no hover
+        });
+
+        playButton.on("pointerout", () => {
+            playButton.setStyle({ backgroundColor: "#007700" }); // Volta pro verde original
+        });
+
+        // Créditos ou rodapé
+        this.add
+            .text(512, 745, "Aperte para sobreviver...", {
+                fontSize: "20px",
+                color: "#888",
+            })
+            .setOrigin(0.5);
+            playButton.on('pointerdown', () => {
             this.scene.start('SurvivalGame');
         });
-        // this.sound.play('backgroundMusic', {
-        //     loop: true,  // Loop da Musica
-        //     volume: 0.5  // Volume entre 0 e 1
-        // });
     }
 }

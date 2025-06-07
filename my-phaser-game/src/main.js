@@ -26,13 +26,8 @@ const config = {
             debug: false // Se true, mostra os contornos dos objetos físicos
         }
     },
-    scene: [
-        MainMenu,       // Cena do menu principal
-        SurvivalGame,   // Cena do jogo principal
-        GameOver,        // Cena de fim de jogo
-        Boot,
-        Preloader
-    ]
+    scene: [Boot, Preloader, MainMenu, SurvivalGame, GameOver]
+
 };
 
 // Cria e exporta a instância do jogo
