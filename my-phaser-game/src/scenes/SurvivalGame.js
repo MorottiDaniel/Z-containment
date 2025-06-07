@@ -29,7 +29,7 @@ export class SurvivalGame extends Phaser.Scene {
         this.createUI();
         this.setupCollisions();
         this.setupMouseShoot();
-        // this.startZombieSpawner();
+        this.startZombieSpawner();
         this.startRoundTimer();
 
         this.physics.world.setBounds(0, 0, 2000, 2000);
