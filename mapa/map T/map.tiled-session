@@ -1,0 +1,43 @@
+{
+    "activeFile": "mapa T.tmx",
+    "expandedProjectPaths": [
+    ],
+    "fileStates": {
+        "": {
+            "scaleInDock": 11
+        },
+        "mapa T.tmx": {
+            "scale": 0.75,
+            "selectedLayer": 4,
+            "viewCenter": {
+                "x": -580,
+                "y": -137.33333333333331
+            }
+        },
+        "mapa T.tmx#Perks": {
+            "scaleInDock": 1
+        },
+        "mapa T.tmx#Zombie Apocalypse Tileset Reference": {
+            "scaleInDock": 1
+        },
+        "mapa T.tmx#armas da parede": {
+            "scaleInDock": 8
+        }
+    },
+    "last.imagePath": "C:/Users/Daniel/Desktop/map T",
+    "map.lastUsedFormat": "tmx",
+    "openFiles": [
+        "mapa T.tmx"
+    ],
+    "project": "map.tiled-project",
+    "recentFiles": [
+        "mapa T.tmx"
+    ],
+    "tileset.embedInMap": true,
+    "tileset.margin": 1,
+    "tileset.spacing": 1,
+    "tileset.tileSize": {
+        "height": 16,
+        "width": 16
+    }
+}
