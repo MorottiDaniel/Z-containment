@@ -41,6 +41,11 @@ export class Preloader extends Scene {
 
         // Carrega a imagem do cursor
         this.load.image('cursor', 'imagens/crosshair.png');
+
+        //Cerragar json mapa
+        this.load.image("tilesRefe", "mapa/Zombie_Tileset_Reference.png");
+        this.load.image("tilesPeks", "mapa/Perks.png");
+        this.load.tilemapTiledJSON("map", "mapa/map01.json");
         
     }
 

@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 
+
 export class SurvivalGame extends Phaser.Scene {
     constructor() {
         super("SurvivalGame");
@@ -10,7 +11,7 @@ export class SurvivalGame extends Phaser.Scene {
         this.revivedOnce = false;
         this.score = 0;
         this.round = 1;
-        this.zombieBaseSpeed = 150; // Velocidade base dos zumbis
+        this.zombieBaseSpeed = 50; // Velocidade base dos zumbis
         this.zombieBaseHp = 3; // HP base dos zumbis
         this.invulnerable = false; // Flag de invulnerabilidade
         this.invulnerableTime = 1000; // Tempo de invulnerabilidade (1 segundo)
@@ -32,11 +33,46 @@ export class SurvivalGame extends Phaser.Scene {
         this.invulnerable = false;
         this.score = 0;
         this.round = 1;
-        this.zombieBaseSpeed = 150;
+        this.zombieBaseSpeed = 50;
         this.zombieBaseHp = 3;
         this.money = 0;
 
-        this.createPlayer();
+
+        const map = this.make.tilemap({ key: "map" });
+        const tileset01 = map.addTilesetImage("Zombie_Tileset", "tilesRefe");
+        const tileset02 = map.addTilesetImage("Perks", "tilesPeks");
+
+        const spawnPoint = map.findObject("playe", obj => obj.name === "Spawn");
+        const camdaLimite = map.createLayer("Limite", tileset01, 0, 0);
+        camdaLimite.setCollisionByProperty({ colisao: true });
+        this.camadaLimite = camdaLimite;
+        const camadaChao = map.createLayer("Chao", tileset01, 0, 0);
+        const camadaObjetosColider = map.createLayer("ObjetosColider", tileset01, 0, 0);
+
+
+        camadaObjetosColider.setCollisionByProperty({ colisao: true });
+        const camadaObjetosScolider = map.createLayer("ObjetosScolider", tileset01, 0, 0);
+        const camadaPerks01 = map.createLayer("Perks01", tileset02, 0, 0);
+        const camadaPerks02 = map.createLayer("Perks02", tileset02, 0, 0);
+        const camadaPerks03 = map.createLayer("Perks03", tileset02, 0, 0);
+        const camadaPerks04 = map.createLayer("Perks04", tileset01, 0, 0);
+        const camadaPorta01 = map.createLayer("Porta01", tileset01, 0, 0);
+        const camadaPorta02 = map.createLayer("Porta02", tileset01, 0, 0);
+        const camadaPorta03 = map.createLayer("Porta03", tileset01, 0, 0);
+        const camadaAcessorios = map.createLayer("Acessorios", tileset01, 0, 0);
+
+        this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+
+
+
+        if (spawnPoint) {
+            this.createPlayer(spawnPoint.x, spawnPoint.y);
+        } else {
+            // Caso não encontre o ponto de spawn, cria o jogador em uma posição padrão
+            console.warn("Ponto de spawn não encontrado! Usando posição padrão.");
+            this.createPlayer(100, 100);
+        }
+        this.camadaObjetosColider = camadaObjetosColider;
         this.createInputs();
         this.createGroups();
         this.createObstacles();
@@ -48,11 +84,16 @@ export class SurvivalGame extends Phaser.Scene {
         this.createUpgradeAreas();
         this.createUpgradeInput();
 
-        this.physics.world.setBounds(0, 0, 2000, 2000);
-        this.cameras.main.setBounds(0, 0, 2000, 2000);
+
+
+
+        this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+        this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
         this.cameras.main.startFollow(this.player);
         this.playerHp = this.playerMaxHp;
         this.purchasedUpgrades = new Set();
+        this.cameras.main.setZoom(2);
+
 
         //Modificando cursor
         this.input.setDefaultCursor('url(assets/imagens/crosshair.png) 32 32, pointer');
@@ -62,13 +103,16 @@ export class SurvivalGame extends Phaser.Scene {
 
     update() {
         this.handlePlayerMovement();
+
+        // Faz o retângulo visual seguir a posição do corpo de física
+
         this.moveZombiesTowardsPlayer();
         this.updateUI();
         this.checkUpgradeAreaOverlap();
     }
 
-    createPlayer() {
-        this.player = this.add.rectangle(1000, 1000, 40, 40, 0x00ff00);
+    createPlayer(x, y) {
+        this.player = this.add.rectangle(x, y, 16, 16, 0x00ff00);
         this.physics.add.existing(this.player);
         this.player.body.setCollideWorldBounds(true);
         this.playerHp = this.playerMaxHp; // Reseta a vida do personagem
@@ -132,6 +176,9 @@ export class SurvivalGame extends Phaser.Scene {
     }
 
     setupCollisions() {
+        this.physics.add.collider(this.player, this.camadaObjetosColider);
+        this.physics.add.collider(this.player, this.camadaLimite);
+
         this.physics.add.overlap(
             this.zombies,
             this.player,
@@ -160,7 +207,7 @@ export class SurvivalGame extends Phaser.Scene {
     }
 
     handlePlayerMovement() {
-        const speed = 200;
+        const speed = 50;
         const body = this.player.body;
         body.setVelocity(0);
 
@@ -322,7 +369,7 @@ export class SurvivalGame extends Phaser.Scene {
                 break;
         }
 
-        const zombie = this.add.rectangle(x, y, 30, 30, color);
+        const zombie = this.add.rectangle(x, y, 16, 16, color);
         this.physics.add.existing(zombie);
         zombie.hp = zombieHp;
         zombie.speed = zombieSpeed;
@@ -357,7 +404,7 @@ export class SurvivalGame extends Phaser.Scene {
                 break;
         }
 
-        const boss = this.add.rectangle(x, y, 50, 50, 0x0000ff); // Azul para o chefão
+        const boss = this.add.rectangle(x, y, 20, 20, 0x0000ff); // Azul para o chefão
         this.physics.add.existing(boss);
         boss.hp = this.zombieBaseHp * 3; // 3x o HP base
         boss.speed = this.zombieBaseSpeed * 0.8; // 20% mais lento
