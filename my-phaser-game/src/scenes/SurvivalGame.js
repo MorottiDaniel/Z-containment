@@ -39,6 +39,7 @@ export class SurvivalGame extends Phaser.Scene {
 
 
         const map = this.make.tilemap({ key: "map" });
+        this.map = map;
         const tileset01 = map.addTilesetImage("Zombie_Tileset", "tilesRefe");
         const tileset02 = map.addTilesetImage("Perks", "tilesPeks");
 
@@ -47,19 +48,23 @@ export class SurvivalGame extends Phaser.Scene {
         camdaLimite.setCollisionByProperty({ colisao: true });
         this.camadaLimite = camdaLimite;
         const camadaChao = map.createLayer("Chao", tileset01, 0, 0);
+
         const camadaObjetosColider = map.createLayer("ObjetosColider", tileset01, 0, 0);
-
-
         camadaObjetosColider.setCollisionByProperty({ colisao: true });
+
         const camadaObjetosScolider = map.createLayer("ObjetosScolider", tileset01, 0, 0);
-        const camadaPerks01 = map.createLayer("Perks01", tileset02, 0, 0);
-        const camadaPerks02 = map.createLayer("Perks02", tileset02, 0, 0);
-        const camadaPerks03 = map.createLayer("Perks03", tileset02, 0, 0);
-        const camadaPerks04 = map.createLayer("Perks04", tileset01, 0, 0);
+        
+        const camadaPerks = map.createLayer("Perks", tileset02, 0, 0);
+        camadaPerks.setCollisionByProperty({ colisao: true });
+        this.camadaPerks = camadaPerks;
+
+
+
         const camadaPorta01 = map.createLayer("Porta01", tileset01, 0, 0);
         const camadaPorta02 = map.createLayer("Porta02", tileset01, 0, 0);
         const camadaPorta03 = map.createLayer("Porta03", tileset01, 0, 0);
         const camadaAcessorios = map.createLayer("Acessorios", tileset01, 0, 0);
+        camadaAcessorios.setDepth(10);
 
         this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
 
@@ -160,7 +165,7 @@ export class SurvivalGame extends Phaser.Scene {
             .text(20, 60, "Round: 1", { fontSize: "16px", fill: "#ffffff" })
             .setScrollFactor(0);
         this.moneyText = this.add
-            .text(20, 80, 'Dinheiro: 0', {fontSize: '16px', fill: '#ffffff'})
+            .text(20, 80, 'Dinheiro: 0', { fontSize: '16px', fill: '#ffffff' })
             .setScrollFactor(0);
 
         this.perkIcons = []; // Armazena os ícones ativos
@@ -178,6 +183,13 @@ export class SurvivalGame extends Phaser.Scene {
     setupCollisions() {
         this.physics.add.collider(this.player, this.camadaObjetosColider);
         this.physics.add.collider(this.player, this.camadaLimite);
+        this.physics.add.collider(this.player, this.camadaPerks);
+
+        this.physics.add.collider(this.zombies, this.camadaObjetosColider);
+        this.physics.add.collider(this.zombies, this.camadaLimite);
+        this.physics.add.collider(this.zombies, this.camadaPerks);
+
+        this.physics.add.collider(this.zombies, this.zombies);
 
         this.physics.add.overlap(
             this.zombies,
@@ -503,23 +515,80 @@ export class SurvivalGame extends Phaser.Scene {
 
         // Texto flutuante sobre o jogador
         this.upgradeText = this.add.text(0, 0, '', {
-            fontSize: '18px',
+            fontSize: '10px',
             fill: '#ffff00',
-            backgroundColor: '#000000',
+            backgroundColor: 'rgba(0, 0, 0, 0.1)',
             padding: { x: 10, y: 5 }
-        }).setScrollFactor(1).setVisible(false);
+        }).setScrollFactor(1).setVisible(false).setDepth(20);
 
-        // Áreas e custos
+        const perkPointReviver = this.map.findObject("perkPoint", obj => obj.name === "perk_reviver");
+        if (!perkPointReviver) {
+            console.error("ERRO: O objeto 'perk_reviver' não foi encontrado na camada 'perkPoint' do mapa.");
+            // Se você não encontrou, não adianta continuar, então saímos da função.
+            return;
+        }
+        const perkPointForca = this.map.findObject("perkPoint", obj => obj.name === "perk_forca");
+        if (!perkPointForca) {
+            console.error("ERRO: O objeto 'perk_forca' não foi encontrado na camada 'perkPoint' do mapa.");
+            // Se você não encontrou, não adianta continuar, então saímos da função.
+            return;
+        }
+        const perkPointResistencia = this.map.findObject("perkPoint", obj => obj.name === "perk_resistencia");
+        if (!perkPointResistencia) {
+            console.error("ERRO: O objeto 'perk_resistencia' não foi encontrado na camada 'perkPoint' do mapa.");
+            // Se você não encontrou, não adianta continuar, então saímos da função.
+            return;
+        }
+        const perkPointRecarga = this.map.findObject("perkPoint", obj => obj.name === "perk_recarga");
+        if (!perkPointRecarga) {
+            console.error("ERRO: O objeto 'perk_recarga' não foi encontrado na camada 'perkPoint' do mapa.");
+            // Se você não encontrou, não adianta continuar, então saímos da função.
+            return;
+        }
         const areaData = [
-            { x: 500, y: 500, cost: 2000, upgrade: 'forca' },
-            { x: 1500, y: 500, cost: 1500, upgrade: 'reviver' },
-            { x: 500, y: 1500, cost: 2500, upgrade: 'resistencia' },
-            { x: 1500, y: 1500, cost: 3000, upgrade: 'recarga' } // ainda não implementado
+            {
+                x: perkPointForca.x,
+                y: perkPointForca.y,
+                width: perkPointForca.width,   // Usamos a largura do objeto do Tiled
+                height: perkPointForca.height,
+                cost: 2000,
+                upgrade: 'forca'
+            },
+            {
+                x: perkPointReviver.x,
+                y: perkPointReviver.y,
+                width: perkPointReviver.width,   // Usamos a largura do objeto do Tiled
+                height: perkPointReviver.height, // Usamos a altura do objeto do Tiled
+                cost: 1500,
+                upgrade: 'reviver'
+            },
+            {
+                x: perkPointResistencia.x,
+                y: perkPointResistencia.y,
+                width: perkPointResistencia.width,   // Usamos a largura do objeto do Tiled
+                height: perkPointResistencia.height,
+                cost: 2500,
+                upgrade: 'resistencia'
+            },
+
+            {
+                x: perkPointRecarga.x,
+                y: perkPointRecarga.y,
+                width: perkPointRecarga.width,   // Usamos a largura do objeto do Tiled
+                height: perkPointRecarga.height,
+                cost: 3000,
+                upgrade: 'recarga'
+            }
         ];
 
-        areaData.forEach((data, index) => {
-            const area = this.add.rectangle(data.x, data.y, 100, 100, 0xffffff, 0.2);
-            this.physics.add.existing(area, true);
+        // 4. Criamos os retângulos usando os dados do array
+        areaData.forEach((data) => {
+            // Usamos .setOrigin(0,0) para alinhar corretamente com a posição do Tiled
+            const area = this.add.rectangle(data.x, data.y, data.width, data.height, 0xffffff, 0.2)
+                .setOrigin(0, 0);
+
+            this.physics.add.existing(area, true); // true para ser estático
+
             area.cost = data.cost;
             area.upgradeType = data.upgrade;
             area.upgradeName = {
@@ -528,7 +597,7 @@ export class SurvivalGame extends Phaser.Scene {
                 resistencia: 'juggermax',
                 recarga: 'fast chug'
             }[data.upgrade];
-            area.message = `pressione E para ${area.upgradeName}, ${area.cost}`;
+            area.message = `pressione E para ${area.upgradeName} (${area.cost})`;
             this.upgradeAreas.push(area);
         });
 
