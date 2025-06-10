@@ -1,6 +1,5 @@
 import Phaser from "phaser";
 
-
 export class SurvivalGame extends Phaser.Scene {
     constructor() {
         super("SurvivalGame");
@@ -17,6 +16,9 @@ export class SurvivalGame extends Phaser.Scene {
         this.invulnerableTime = 1000; // Tempo de invulnerabilidade (1 segundo)
         this.money = 0; // Quant. de dinheiro no começo do game
         this.purchasedUpgrades = new Set(); // Armazena upgrades já comprados
+        this.weapons = [{ type: 'pistol', damage: 1, fireRate: 500, spread: 0, bulletSpeed: 500 }]; // Armas iniciais do jogador (apenas pistola)
+        this.currentWeaponIndex = 0; // Índice da arma atual
+        this.lastShotTime = 0; // Controla o tempo do último disparo
     }
 
     preload() {
@@ -25,6 +27,7 @@ export class SurvivalGame extends Phaser.Scene {
         this.load.image('perk_reviver', 'assets/perks/revive.png');
         this.load.image('perk_resistencia', 'assets/perks/forca.png');
         this.load.image('perk_recarga', 'assets/perks/speed.png');
+        // Não carrega imagens para armas, pois não estão disponíveis
     }
 
     create() {
@@ -37,7 +40,6 @@ export class SurvivalGame extends Phaser.Scene {
         this.zombieBaseHp = 3;
         this.money = 0;
 
-
         const map = this.make.tilemap({ key: "map" });
         const tileset01 = map.addTilesetImage("Zombie_Tileset", "tilesRefe");
         const tileset02 = map.addTilesetImage("Perks", "tilesPeks");
@@ -48,7 +50,6 @@ export class SurvivalGame extends Phaser.Scene {
         this.camadaLimite = camdaLimite;
         const camadaChao = map.createLayer("Chao", tileset01, 0, 0);
         const camadaObjetosColider = map.createLayer("ObjetosColider", tileset01, 0, 0);
-
 
         camadaObjetosColider.setCollisionByProperty({ colisao: true });
         const camadaObjetosScolider = map.createLayer("ObjetosScolider", tileset01, 0, 0);
@@ -62,8 +63,6 @@ export class SurvivalGame extends Phaser.Scene {
         const camadaAcessorios = map.createLayer("Acessorios", tileset01, 0, 0);
 
         this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
-
-
 
         if (spawnPoint) {
             this.createPlayer(spawnPoint.x, spawnPoint.y);
@@ -83,9 +82,8 @@ export class SurvivalGame extends Phaser.Scene {
         this.startRoundTimer();
         this.createUpgradeAreas();
         this.createUpgradeInput();
-
-
-
+        this.createWeaponAreas();
+        this.createWeaponInput();
 
         this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
         this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
@@ -94,11 +92,8 @@ export class SurvivalGame extends Phaser.Scene {
         this.purchasedUpgrades = new Set();
         this.cameras.main.setZoom(2);
 
-
-        //Modificando cursor
+        // Modificando cursor
         this.input.setDefaultCursor('url(assets/imagens/crosshair.png) 32 32, pointer');
-
-
     }
 
     update() {
@@ -109,6 +104,7 @@ export class SurvivalGame extends Phaser.Scene {
         this.moveZombiesTowardsPlayer();
         this.updateUI();
         this.checkUpgradeAreaOverlap();
+        this.checkWeaponAreaOverlap();
     }
 
     createPlayer(x, y) {
@@ -120,7 +116,7 @@ export class SurvivalGame extends Phaser.Scene {
 
     createInputs() {
         this.cursors = this.input.keyboard.createCursorKeys();
-        this.keys = this.input.keyboard.addKeys("W,A,S,D");
+        this.keys = this.input.keyboard.addKeys("W,A,S,D,1,2");
     }
 
     createGroups() {
@@ -160,7 +156,10 @@ export class SurvivalGame extends Phaser.Scene {
             .text(20, 60, "Round: 1", { fontSize: "16px", fill: "#ffffff" })
             .setScrollFactor(0);
         this.moneyText = this.add
-            .text(20, 80, 'Dinheiro: 0', {fontSize: '16px', fill: '#ffffff'})
+            .text(20, 80, 'Dinheiro: 0', { fontSize: '16px', fill: '#ffffff' })
+            .setScrollFactor(0);
+        this.weaponText = this.add
+            .text(20, 100, 'Arma: Pistol', { fontSize: '16px', fill: '#ffffff' })
             .setScrollFactor(0);
 
         this.perkIcons = []; // Armazena os ícones ativos
@@ -173,6 +172,7 @@ export class SurvivalGame extends Phaser.Scene {
         this.scoreText.setText("Pontos: " + this.score);
         this.roundText.setText("Round: " + this.round);
         this.moneyText.setText("Dinheiro: " + this.money);
+        this.weaponText.setText(`Arma: ${this.weapons[this.currentWeaponIndex].type}`);
     }
 
     setupCollisions() {
@@ -220,6 +220,13 @@ export class SurvivalGame extends Phaser.Scene {
             body.setVelocityY(-speed);
         else if (this.cursors.down.isDown || this.keys.S.isDown)
             body.setVelocityY(speed);
+
+        // Troca de armas com teclas 1 e 2
+        if (this.keys['1'].isDown && this.weapons[0]) {
+            this.currentWeaponIndex = 0;
+        } else if (this.keys['2'].isDown && this.weapons[1]) {
+            this.currentWeaponIndex = 1;
+        }
     }
 
     moveZombiesTowardsPlayer() {
@@ -281,31 +288,63 @@ export class SurvivalGame extends Phaser.Scene {
     }
 
     shootBullet() {
-        const bullet = this.add.rectangle(
-            this.player.x,
-            this.player.y,
-            10,
-            5,
-            0xffff00
-        );
-        this.physics.add.existing(bullet);
-        this.bullets.add(bullet);
+        const currentTime = this.time.now;
+        const weapon = this.weapons[this.currentWeaponIndex];
+        if (currentTime < this.lastShotTime + weapon.fireRate) return;
 
-        bullet.body.setCollideWorldBounds(true);
-        bullet.body.onWorldBounds = true;
+        this.lastShotTime = currentTime;
 
-        const pointer = this.input.activePointer;
-        const angle = Phaser.Math.Angle.Between(
-            this.player.x,
-            this.player.y,
-            pointer.worldX,
-            pointer.worldY
-        );
-        const speed = 500;
+        if (weapon.type === 'shotgun') {
+            // Shotgun dispara 5 projéteis com spread
+            for (let i = 0; i < 5; i++) {
+                const bullet = this.add.rectangle(
+                    this.player.x,
+                    this.player.y,
+                    10,
+                    5,
+                    0xffff00
+                );
+                this.physics.add.existing(bullet);
+                this.bullets.add(bullet);
+                bullet.body.setCollideWorldBounds(true);
+                bullet.body.onWorldBounds = true;
 
-        this.physics.velocityFromRotation(angle, speed, bullet.body.velocity);
+                const pointer = this.input.activePointer;
+                const angle = Phaser.Math.Angle.Between(
+                    this.player.x,
+                    this.player.y,
+                    pointer.worldX,
+                    pointer.worldY
+                );
+                // Adiciona spread ao ângulo
+                const spreadAngle = angle + Phaser.Math.DegToRad(Phaser.Math.Between(-weapon.spread, weapon.spread));
+                this.physics.velocityFromRotation(spreadAngle, weapon.bulletSpeed, bullet.body.velocity);
+                this.time.delayedCall(2000, () => bullet.destroy());
+            }
+        } else {
+            // Outras armas disparam um único projétil
+            const bullet = this.add.rectangle(
+                this.player.x,
+                this.player.y,
+                10,
+                5,
+                0xffff00
+            );
+            this.physics.add.existing(bullet);
+            this.bullets.add(bullet);
+            bullet.body.setCollideWorldBounds(true);
+            bullet.body.onWorldBounds = true;
 
-        this.time.delayedCall(2000, () => bullet.destroy());
+            const pointer = this.input.activePointer;
+            const angle = Phaser.Math.Angle.Between(
+                this.player.x,
+                this.player.y,
+                pointer.worldX,
+                pointer.worldY
+            );
+            this.physics.velocityFromRotation(angle, weapon.bulletSpeed, bullet.body.velocity);
+            this.time.delayedCall(2000, () => bullet.destroy());
+        }
     }
 
     startZombieSpawner() {
@@ -439,7 +478,7 @@ export class SurvivalGame extends Phaser.Scene {
             if (this.canRevive && !this.revivedOnce) {
                 this.revivedOnce = true;
 
-                // RESETA BUFFS (menos o revive)
+                // RESETA BUFFS (menos o revive) e armas
                 this.playerMaxHp = 5;
                 this.playerHp = this.playerMaxHp;
                 this.playerDamage = 1;
@@ -447,6 +486,8 @@ export class SurvivalGame extends Phaser.Scene {
                 this.purchasedUpgrades.clear(); // limpa upgrades comprados
                 this.perkIcons.forEach(icon => icon.destroy());
                 this.perkIcons = [];
+                this.weapons = [{ type: 'pistol', damage: 1, fireRate: 500, spread: 0, bulletSpeed: 500 }];
+                this.currentWeaponIndex = 0;
 
                 this.upgradeText.setText('Você reviveu!');
                 this.upgradeText.setPosition(this.player.x - 60, this.player.y - 40);
@@ -464,7 +505,7 @@ export class SurvivalGame extends Phaser.Scene {
 
     hitZombie(bullet, zombie) {
         bullet.destroy();
-        zombie.hp -= this.playerDamage;
+        zombie.hp -= this.weapons[this.currentWeaponIndex].damage;
 
         this.money += 10;
 
@@ -535,6 +576,30 @@ export class SurvivalGame extends Phaser.Scene {
         this.currentUpgradeArea = null;
     }
 
+    createWeaponAreas() {
+        this.weaponAreas = [];
+
+        // Áreas e custos para armas
+        const weaponData = [
+            { x: 600, y: 600, cost: 3000, weapon: 'minigun', color: 0xff0000 },
+            { x: 1400, y: 600, cost: 2000, weapon: 'shotgun', color: 0x00ff00 },
+            { x: 600, y: 1400, cost: 2500, weapon: 'rifle', color: 0x0000ff }
+        ];
+
+        weaponData.forEach((data) => {
+            const area = this.add.rectangle(data.x, data.y, 100, 100, 0x00ff00, 0.2);
+            this.physics.add.existing(area, true);
+            area.cost = data.cost;
+            area.weaponType = data.weapon;
+            // Usa retângulo colorido como placeholder para o ícone
+            area.icon = this.add.rectangle(data.x, data.y, 64, 64, data.color).setAlpha(0.8);
+            area.message = `pressione F para ${data.weapon}, ${data.cost}`;
+            this.weaponAreas.push(area);
+        });
+
+        this.currentWeaponArea = null;
+    }
+
     createUpgradeInput() {
         this.input.keyboard.on('keydown-E', () => {
             if (this.currentUpgradeArea) {
@@ -555,6 +620,7 @@ export class SurvivalGame extends Phaser.Scene {
                     switch (area.upgradeType) {
                         case 'forca':
                             this.playerDamage = 2;
+                            this.weapons.forEach(weapon => weapon.damage *= 2); // Dobra o dano de todas as armas
                             break;
                         case 'reviver':
                             this.canRevive = true;
@@ -571,9 +637,60 @@ export class SurvivalGame extends Phaser.Scene {
                     this.time.delayedCall(1500, () => {
                         this.upgradeText.setVisible(false);
                     });
+                } else {
+                    this.upgradeText.setText(`Dinheiro insuficiente`);
+                    this.time.delayedCall(1500, () => {
+                        this.upgradeText.setVisible(false);
+                    });
+                }
+            }
+        });
+    }
 
-                    // Pode adicionar lógica para cada tipo de upgrade aqui se quiser
-                    // Exemplo: aumentar dano, velocidade, vida etc.
+    createWeaponInput() {
+        this.input.keyboard.on('keydown-F', () => {
+            if (this.currentWeaponArea) {
+                const area = this.currentWeaponArea;
+
+                if (this.money >= area.cost) {
+                    this.money -= area.cost;
+
+                    const weaponStats = {
+                        minigun: { type: 'minigun', damage: 1.5, fireRate: 100, spread: 5, bulletSpeed: 600 },
+                        shotgun: { type: 'shotgun', damage: 2, fireRate: 800, spread: 10, bulletSpeed: 400 },
+                        rifle: { type: 'rifle', damage: 1.2, fireRate: 200, spread: 2, bulletSpeed: 700 }
+                    }[area.weaponType];
+
+                    if (this.weapons.length < 2) {
+                        // Adiciona a nova arma se houver espaço
+                        this.weapons.push(weaponStats);
+                        this.currentWeaponIndex = this.weapons.length - 1;
+                    } else {
+                        // Escolher slot para substituir (1 ou 2)
+                        this.upgradeText.setText('Pressione 1 ou 2 para substituir arma');
+                        this.upgradeText.setPosition(this.player.x - 90, this.player.y - 50);
+                        this.upgradeText.setVisible(true);
+
+                        const keyHandler = (event) => {
+                            if (event.key === '1' || event.key === '2') {
+                                const slot = event.key === '1' ? 0 : 1;
+                                this.weapons[slot] = weaponStats;
+                                this.currentWeaponIndex = slot;
+                                this.upgradeText.setText(`Arma ${area.weaponType} equipada no slot ${event.key}`);
+                                this.time.delayedCall(1500, () => {
+                                    this.upgradeText.setVisible(false);
+                                });
+                                this.input.keyboard.off('keydown', keyHandler);
+                            }
+                        };
+
+                        this.input.keyboard.on('keydown', keyHandler);
+                    }
+
+                    this.upgradeText.setText(`Arma ${area.weaponType} comprada!`);
+                    this.time.delayedCall(1500, () => {
+                        this.upgradeText.setVisible(false);
+                    });
                 } else {
                     this.upgradeText.setText(`Dinheiro insuficiente`);
                     this.time.delayedCall(1500, () => {
@@ -605,6 +722,32 @@ export class SurvivalGame extends Phaser.Scene {
         if (!inArea) {
             this.currentUpgradeArea = null;
             this.upgradeText.setVisible(false);
+        }
+    }
+
+    checkWeaponAreaOverlap() {
+        let inArea = false;
+
+        for (const area of this.weaponAreas) {
+            const boundsA = this.player.getBounds();
+            const boundsB = area.getBounds();
+
+            if (Phaser.Geom.Intersects.RectangleToRectangle(boundsA, boundsB)) {
+                inArea = true;
+                this.currentWeaponArea = area;
+
+                this.upgradeText.setText(area.message);
+                this.upgradeText.setPosition(this.player.x - 90, this.player.y - 50);
+                this.upgradeText.setVisible(true);
+                break;
+            }
+        }
+
+        if (!inArea) {
+            this.currentWeaponArea = null;
+            if (!this.currentUpgradeArea) {
+                this.upgradeText.setVisible(false);
+            }
         }
     }
 
