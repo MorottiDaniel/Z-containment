@@ -6,19 +6,19 @@ export class GameOver extends Scene {
     }
 
     create() {
-        this.add.image(512, 384, "gover-background").setDisplaySize(1024, 768);
-        // Exibe a mensagem "Game Over"
+        // Centraliza a imagem de fundo em 1920x1080 e ajusta o tamanho para cobrir a tela
+        this.add.image(1920 / 2, 1080 / 2, "gover-background").setDisplaySize(1920, 1080);
 
-        // Botão para voltar ao menu
+        // Botão retry centralizado na tela, um pouco abaixo do centro vertical
         const retryButton = this.add
-            .text(512, 400, "↻ RETRY", {
-                fontSize: "28px", // Menor tamanho de fonte
+            .text(1920 / 2, 1080 / 2 + 50, "↻ RETRY", {
+                fontSize: "28px", // Mantém o tamanho da fonte
                 fontFamily: "Pixellari",
                 backgroundColor: "#800000",
                 color: "#ffffff",
-                padding: { x: 18, y: 12 }, // Menor padding
+                padding: { x: 18, y: 12 },
                 align: "center",
-                fixedWidth: 180, // Menor largura fixa
+                fixedWidth: 180,
                 shadow: {
                     offsetX: 2,
                     offsetY: 2,
