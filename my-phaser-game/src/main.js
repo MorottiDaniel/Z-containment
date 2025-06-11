@@ -11,8 +11,8 @@ import { GameOver } from './scenes/GameOver';
 // Objeto de configuração do jogo
 const config = {
     type: Phaser.AUTO, // Phaser escolhe automaticamente entre WebGL ou Canvas
-    width: 1024,       // Largura da tela
-    height: 768,       // Altura da tela
+    width: 1920,       // Largura da tela
+    height: 1080,       // Altura da tela
     parent: 'game-container', // ID da div onde o jogo será renderizado
     backgroundColor: '#000000', // Cor de fundo do jogo
     scale: {
