@@ -16,14 +16,20 @@ export class Cutscene extends Phaser.Scene {
     }
 
     create() {
+        this.cutsceneMusic = this.sound.add("cutsceneMusic", {
+            loop: true,
+            volume: 0.4,
+        });
+        this.cutsceneMusic.play();
+
         const centerX = this.cameras.main.centerX;
         const centerY = this.cameras.main.centerY;
 
         const storyTexts = [
-            "Em uma instalação subterrânea, o Professor Cid comandava um experimento com uma nova espécie de fungo: Hughos fumeris.\n\nO objetivo? Regeneração celular, fim da calvície, imunidade total e... paciência para assistir às aulas de Empreendedorismo e Mentalidade Criativa.",
-            "Mas o impensável aconteceu. A cobaia saiu do controle e atacou os cientistas — começando, é claro, pelo Professor Cid... e os carecas.\n\nEsse dia ficou marcado na história como: o Dia Z.",
-            "Com todos os calvos devorados, os zumbis ficaram sem alimento.\n\nE quando a fome bateu... eles partiram para cima das pessoas normais.",
-            "Você é um dos últimos sobreviventes.\n\nAgora, não se trata mais de salvar o mundo... mas sim de sobreviver por mais um round.",
+            "Em uma instalação subterrânea, o Professor Cid comandava um experimento com uma nova espécie de fungo: Hughos fumeris.\nO objetivo? Regeneração celular, fim da calvície, imunidade total e... paciência para assistir às aulas de Empreendedorismo e Mentalidade Criativa.",
+            "Mas o impensável aconteceu. A cobaia saiu do controle e atacou os cientistas — começando, é claro, pelo Professor Cid... e os carecas.\nEsse dia ficou marcado na história como: o Dia Z.",
+            "Com todos os carecas e calvos devorados, os zumbis ficaram sem alimento.\nE quando a fome bateu... eles partiram para cima das pessoas normais.",
+            "Você é um dos últimos sobreviventes.\nAgora, não se trata mais de salvar o mundo... mas sim de sobreviver por mais um round.",
         ];
 
         const images = ["cutscene1", "cutscene2", "cutscene3", "cutscene4"];
@@ -72,6 +78,15 @@ export class Cutscene extends Phaser.Scene {
         } else {
             this.slides[this.currentSlideIndex].setVisible(true);
             this.texts[this.currentSlideIndex].setVisible(true);
+
+            // EFEITOS SONOROS POR CENA
+            if (this.currentSlideIndex === 1) {
+                this.sound.play("alarme", { volume: 0.1 });
+                this.sound.play("gritinho", { volume: 0.2 });
+            }
+            if (this.currentSlideIndex === 2) {
+                this.sound.play("zumbi", {volume: 0.1, loop: true});
+            }
         }
     }
 }

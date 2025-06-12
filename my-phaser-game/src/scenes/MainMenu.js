@@ -7,7 +7,9 @@ export class MainMenu extends Scene {
 
     create() {
         // Imagem de fundo centralizada em 1920x1080 e redimensionada para cobrir a tela
-        this.add.image(1920 / 2, 1080 / 2, "menu-background").setDisplaySize(1920, 1080);
+        this.add
+            .image(1920 / 2, 1080 / 2, "menu-background")
+            .setDisplaySize(1920, 1080);
 
         this.cameras.main.setBackgroundColor("#1a1a1a");
 
@@ -43,6 +45,7 @@ export class MainMenu extends Scene {
             .setOrigin(0.5);
 
         playButton.on("pointerdown", () => {
+            this.sound.stopAll(); // Para toda música e efeitos
             this.scene.start("SurvivalGame");
         });
     }

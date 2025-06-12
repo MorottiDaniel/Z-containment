@@ -34,9 +34,6 @@ export class Preloader extends Scene {
         // Define o caminho base para os arquivos carregados
         this.load.setPath("assets");
 
-        // Carrega a música de fundo do menu
-        this.load.audio("backgroundMusic", "audio/mscMenu.mp3");
-
         // Carrega a imagem de fundo do menu principal
         this.load.image("menu-background", "imagens/menu-background.png");
 
@@ -56,6 +53,12 @@ export class Preloader extends Scene {
         this.load.image("cutscene2", "imagens/cutscene2.png");
         this.load.image("cutscene3", "imagens/cutscene3.png");
         this.load.image("cutscene4", "imagens/cutscene4.png");
+
+        // musica cutscene
+        this.load.audio("cutsceneMusic", "audio/cutscene-theme.mp3");
+        this.load.audio("gritinho", "audio/grito.mp3");
+        this.load.audio("alarme", "audio/alarm.mp3");
+        this.load.audio("zumbi", "audio/zombieSound.mp3");
     }
 
     create() {
