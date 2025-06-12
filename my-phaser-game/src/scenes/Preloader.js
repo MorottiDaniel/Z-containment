@@ -7,23 +7,27 @@ export class Preloader extends Scene {
 
     preload() {
         // Cor de fundo da cena de loading
-        this.cameras.main.setBackgroundColor('#111');
+        this.cameras.main.setBackgroundColor("#111");
 
         // Texto "Carregando..."
-        this.add.text(512, 300, 'Carregando...', {
-            fontFamily: 'Arial',
-            fontSize: '24px',
-            color: '#ffffff'
-        }).setOrigin(0.5);
+        this.add
+            .text(512, 300, "Carregando...", {
+                fontFamily: "Arial",
+                fontSize: "24px",
+                color: "#ffffff",
+            })
+            .setOrigin(0.5);
 
         // Barra de fundo (cinza escuro)
         this.add.rectangle(512, 360, 400, 30, 0x222222).setOrigin(0.5);
 
         // Barra de progresso (verde)
-        const progressBar = this.add.rectangle(312, 360, 0, 30, 0x00ff00).setOrigin(0, 0.5);
+        const progressBar = this.add
+            .rectangle(312, 360, 0, 30, 0x00ff00)
+            .setOrigin(0, 0.5);
 
         // Atualiza a largura da barra conforme o progresso
-        this.load.on('progress', (value) => {
+        this.load.on("progress", (value) => {
             progressBar.width = 400 * value;
         });
 
@@ -40,17 +44,22 @@ export class Preloader extends Scene {
         this.load.image("gover-background", "imagens/gover-background.png");
 
         // Carrega a imagem do cursor
-        this.load.image('cursor', 'imagens/crosshair.png');
+        this.load.image("cursor", "imagens/crosshair.png");
 
         //Cerragar json mapa
         this.load.image("tilesRefe", "mapa/Zombie_Tileset_Reference.png");
         this.load.image("tilesPeks", "mapa/Perks.png");
         this.load.tilemapTiledJSON("map", "mapa/map01.json");
-        
+
+        // Cutscenes
+        this.load.image("cutscene1", "imagens/cutscene1.png");
+        this.load.image("cutscene2", "imagens/cutscene2.png");
+        this.load.image("cutscene3", "imagens/cutscene3.png");
+        this.load.image("cutscene4", "imagens/cutscene4.png");
     }
 
     create() {
         // Quando tudo estiver carregado, inicia o menu principal
-        this.scene.start("MainMenu");
+        this.scene.start("Cutscene");
     }
 }
