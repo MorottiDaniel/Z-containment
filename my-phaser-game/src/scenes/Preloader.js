@@ -9,21 +9,21 @@ export class Preloader extends Scene {
         // Cor de fundo da cena de loading
         this.cameras.main.setBackgroundColor("#111");
 
-        // Texto "Carregando..."
+        // Texto "Carregando..." centralizado
         this.add
-            .text(512, 300, "Carregando...", {
+            .text(960, 500, "Carregando...", {
                 fontFamily: "Arial",
                 fontSize: "24px",
                 color: "#ffffff",
             })
             .setOrigin(0.5);
 
-        // Barra de fundo (cinza escuro)
-        this.add.rectangle(512, 360, 400, 30, 0x222222).setOrigin(0.5);
+        // Barra de fundo 
+        this.add.rectangle(960, 540, 400, 30, 0x222222).setOrigin(0.5);
 
-        // Barra de progresso (verde)
+        // Barra de progresso 
         const progressBar = this.add
-            .rectangle(312, 360, 0, 30, 0x00ff00)
+            .rectangle(760, 540, 0, 30, 0x00ff00)
             .setOrigin(0, 0.5);
 
         // Atualiza a largura da barra conforme o progresso
@@ -47,6 +47,17 @@ export class Preloader extends Scene {
         this.load.image("tilesRefe", "mapa/Zombie_Tileset_Reference.png");
         this.load.image("tilesPeks", "mapa/Perks.png");
         this.load.tilemapTiledJSON("map", "mapa/map01.json");
+
+        //Imagens do Zombie Tank
+        this.load.image('tank_right', '/zombies/tank_right.png');
+        this.load.image('tank_right2', '/zombies/tank_right2.png');
+        this.load.image('tank_left2', '/zombies/tank_left2.png');
+        this.load.image('tank_left', '/zombies/tank_left.png');
+        this.load.image('tank_up', '/zombies/tank_up.png');
+        this.load.image('tank_up2', '/zombies/tank_up2.png');
+        this.load.image('tank_down', '/zombies/tank_down.png');
+        this.load.image('tank_down2', '/zombies/tank_down2.png');
+        
 
         // Cutscenes
         this.load.image("cutscene1", "imagens/cutscene1.png");
