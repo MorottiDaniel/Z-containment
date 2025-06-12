@@ -1,12 +1,13 @@
 // Importa a classe Game do Phaser
 import { Game } from 'phaser';
 
-// Importa as três cenas que serão usadas
+// Importa as cenas que serão usadas
 import { Boot } from './scenes/Boot';
 import { Preloader } from './scenes/Preloader';
 import { MainMenu } from './scenes/MainMenu';
 import { SurvivalGame } from './scenes/SurvivalGame';
 import { GameOver } from './scenes/GameOver';
+import { Cutscene } from './scenes/Cutscene';
 
 // Objeto de configuração do jogo
 const config = {
@@ -26,7 +27,7 @@ const config = {
             debug: true // Se true, mostra os contornos dos objetos físicos
         }
     },
-    scene: [Boot, Preloader, MainMenu, SurvivalGame, GameOver]
+    scene: [Boot, Preloader, MainMenu, SurvivalGame, GameOver, Cutscene]
 
 };
 
