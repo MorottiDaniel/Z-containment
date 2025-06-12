@@ -3,7 +3,7 @@
 Z Containment é um jogo de sobrevivência em 2D desenvolvido com [Phaser 3](https://phaser.io/). O jogador controla um personagem fixo no centro da tela, enfrentando hordas de zumbis que surgem ao redor e se aproximam. O objetivo é sobreviver o máximo possível, enfrentando desafios progressivos enquanto tenta escapar da ameaça crescente.
 
 ## 🎯 Jogue agora no navegador
-https://seuusuario.github.io/z-containment/
+https://MorottiDaniel.github.io/Z-containment/
 
 ## 🎲 Funcionalidades Principais
 
@@ -24,14 +24,14 @@ https://seuusuario.github.io/z-containment/
 1. Clone o repositório:
 
    ```bash
-   git clone https://github.com/MorottiDaniel/z-containment.git
+   git clone https://github.com/MorottiDaniel/Z-containment.git
 
 2. Navegue até o diretório do projeto:
 
    ```bash
-   cd z-containment
+   cd Z-containment
 
-3.Abra o arquivo index.html em seu navegador preferido ou use uma extensão como o Live Server no VS Code para rodar localmente.
+3. Abra o arquivo index.html em seu navegador preferido ou use uma extensão como o Live Server no VS Code para rodar localmente.
 
 ## 👥 Integrantes do Grupo
 - Daniel Morotti Vieira (RA 24191444-2)
@@ -44,5 +44,5 @@ https://seuusuario.github.io/z-containment/
 ## 📊 Status do Projeto
 ✅ Concluído
 
-📄 Licença
+## 📄 Licença
 Este projeto foi desenvolvido como trabalho acadêmico e está sob a licença MIT.
