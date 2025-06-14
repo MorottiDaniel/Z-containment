@@ -34,21 +34,7 @@ export class SurvivalGame extends Phaser.Scene {
     }
 
     // 2. Pré-carregamento de assets
-    preload() {
-        // Carregamento de Tilemap
-        this.load.image("tilesRefe", "assets/tilemaps/refere.png");
-        this.load.image("tilesPeks", "assets/perks/perks.png");
-        this.load.tilemapTiledJSON("map", "assets/tilemaps/mapa.json");
 
-        // Carregamento de Imagens de Obstáculos (exemplo)
-        this.load.image("obstacle", "assets/tilemaps/obstacle.png");
-
-        // Carregamento de ícones de perks
-        this.load.image('perk_forca', 'assets/perks/doubletap.png');
-        this.load.image('perk_reviver', 'assets/perks/revive.png');
-        this.load.image('perk_resistencia', 'assets/perks/forca.png');
-        this.load.image('perk_velocidade', 'assets/perks/speed.png');
-    }
 
     // 3. Funções de Criação (todos os creates)
 
@@ -153,10 +139,20 @@ export class SurvivalGame extends Phaser.Scene {
     }
 
     createPlayer(x, y) {
-        this.player = this.add.rectangle(x, y, 16, 16, 0x00ff00);
-        this.physics.add.existing(this.player);
+        this.player = this.physics.add.sprite(x, y, 'player_parado_down');
+        this.player.setDisplaySize(16, 16);
+        this.player.setOrigin(0.5);
         this.player.body.setCollideWorldBounds(true);
-        // A vida do jogador já é resetada no método create() principal
+
+        // Controle de animação
+        this.player.frameToggleTime = 0;
+        this.player.frameToggleState = false;
+        this.player.isTakingDamage = false;
+        this.player.hitFrameToggle = false;
+        this.player.hitFrameToggleTime = 0;
+
+        // 🔥 Começa olhando pra baixo
+        this.player.lastDirection = 'down';
     }
 
     createInputs() {
@@ -382,18 +378,113 @@ export class SurvivalGame extends Phaser.Scene {
         const speed = this.playerCurrentSpeed;
         const body = this.player.body;
         body.setVelocity(0);
-        if (this.cursors.left.isDown || this.keys.A.isDown) body.setVelocityX(-speed);
-        else if (this.cursors.right.isDown || this.keys.D.isDown) body.setVelocityX(speed);
-        if (this.cursors.up.isDown || this.keys.W.isDown) body.setVelocityY(-speed);
-        else if (this.cursors.down.isDown || this.keys.S.isDown) body.setVelocityY(speed);
+
+        const vx = (this.cursors.left.isDown || this.keys.A.isDown) ? -speed :
+            (this.cursors.right.isDown || this.keys.D.isDown) ? speed : 0;
+
+        const vy = (this.cursors.up.isDown || this.keys.W.isDown) ? -speed :
+            (this.cursors.down.isDown || this.keys.S.isDown) ? speed : 0;
+
+        body.setVelocityX(vx);
+        body.setVelocityY(vy);
+
+        if (this.player.isTakingDamage) {
+            // 🔥 Se estiver tomando dano, ignora qualquer animação
+            return;
+        }
+
+        if (vx !== 0 || vy !== 0) {
+            this.simulatePlayerAnimation(this.player, 'player', vx, vy);
+
+            if (Math.abs(vx) > Math.abs(vy)) {
+                this.player.lastDirection = (vx > 0) ? 'right' : 'left';
+            } else {
+                this.player.lastDirection = (vy > 0) ? 'down' : 'up';
+            }
+        } else {
+            this.player.setTexture(`player_parado_${this.player.lastDirection}`);
+        }
+    }
+
+    //Animação de dano do Player
+    playPlayerHitAnimation() {
+        this.player.isTakingDamage = true;
+
+        const toggleHitFrame = () => {
+            if (!this.player.isTakingDamage) return;
+
+            const now = this.time.now;
+            if (now > (this.player.hitFrameToggleTime || 0)) {
+                const frame = this.player.hitFrameToggle ? '2' : '1';
+                this.player.setTexture(`player_hit_${this.player.lastDirection}${frame}`);
+                this.player.hitFrameToggle = !this.player.hitFrameToggle;
+                this.player.hitFrameToggleTime = now + 150; // velocidade da troca dos hits
+            }
+
+            this.hitTimer = this.time.delayedCall(150, toggleHitFrame);
+        };
+
+        toggleHitFrame();
+
+        // 🔥 Após o tempo de invulnerabilidade, encerra o hit
+        this.time.delayedCall(this.invulnerableTime, () => {
+            this.player.isTakingDamage = false;
+            this.player.setTexture(`player_parado_${this.player.lastDirection}`);
+        });
+    }
+
+    //Animação do Player
+    simulatePlayerAnimation(player, baseKey, vx, vy) {
+        const now = this.time.now;
+
+        if (Math.abs(vx) > Math.abs(vy)) {
+            // Movimento horizontal
+            if (vx > 0) {
+                if (now > (player.frameToggleTime || 0)) {
+                    const next = player.frameToggleState ? `${baseKey}_right2` : `${baseKey}_right`;
+                    player.setTexture(next);
+                    player.frameToggleState = !player.frameToggleState;
+                    player.frameToggleTime = now + 300; // tempo entre os frames
+                }
+            } else if (vx < 0) {
+                if (now > (player.frameToggleTime || 0)) {
+                    const next = player.frameToggleState ? `${baseKey}_left2` : `${baseKey}_left`;
+                    player.setTexture(next);
+                    player.frameToggleState = !player.frameToggleState;
+                    player.frameToggleTime = now + 300;
+                }
+            }
+        } else {
+            // Movimento vertical
+            if (vy > 0) {
+                if (now > (player.frameToggleTime || 0)) {
+                    const next = player.frameToggleState ? `${baseKey}_down2` : `${baseKey}_down`;
+                    player.setTexture(next);
+                    player.frameToggleState = !player.frameToggleState;
+                    player.frameToggleTime = now + 300;
+                }
+            } else if (vy < 0) {
+                if (now > (player.frameToggleTime || 0)) {
+                    const next = player.frameToggleState ? `${baseKey}_up2` : `${baseKey}_up`;
+                    player.setTexture(next);
+                    player.frameToggleState = !player.frameToggleState;
+                    player.frameToggleTime = now + 300;
+                }
+            }
+        }
     }
 
     handlePlayerHit(player, zombie) {
         if (this.invulnerable) return;
+
         this.playerHp -= 1;
         this.invulnerable = true;
-        this.lastHitTime = this.time.now; // Atualiza o tempo do último dano
+        this.lastHitTime = this.time.now;
 
+        // 🔥 Começa a animação de hit
+        this.playPlayerHitAnimation();
+
+        // 🔥 Tween piscando
         this.sound.play("ouch", {volume: 0.15});
 
         this.tweens.add({
@@ -402,73 +493,81 @@ export class SurvivalGame extends Phaser.Scene {
             duration: 100,
             repeat: 5,
             yoyo: true,
-            onComplete: () => { this.player.setAlpha(1); },
+            onComplete: () => {
+                this.player.setAlpha(1);
+            },
         });
-        this.time.delayedCall(this.invulnerableTime, () => { this.invulnerable = false; });
-        if (this.playerHp <= 0) { this.gameOver(); }
+
+        this.time.delayedCall(this.invulnerableTime, () => {
+            this.invulnerable = false;
+        });
+
+        if (this.playerHp <= 0) {
+            this.gameOver();
+        }
     }
 
     shootBullet() {
-    const currentTime = this.time.now;
-    const weapon = this.weapons[this.currentWeaponIndex];
+        const currentTime = this.time.now;
+        const weapon = this.weapons[this.currentWeaponIndex];
 
-    // Verifica tempo do último disparo (fireRate)
-    if (currentTime < this.lastShotTime + weapon.fireRate) {
-        return;
-    }
-    this.lastShotTime = currentTime;
+        // Verifica tempo do último disparo (fireRate)
+        if (currentTime < this.lastShotTime + weapon.fireRate) {
+            return;
+        }
+        this.lastShotTime = currentTime;
 
-    const pointer = this.input.activePointer;
-    const targetX = pointer.worldX;
-    const targetY = pointer.worldY;
+        const pointer = this.input.activePointer;
+        const targetX = pointer.worldX;
+        const targetY = pointer.worldY;
 
-    // 🔊 Sons de disparo por tipo de arma
-    const soundKey = {
-        pistol: 'pistol_shot',
-        minigun: 'minigun_shot',
-        shotgun: 'shotgun_shot',
-        rifle: 'rifle_shot',
-        sniper: 'sniper_shot'
-    }[weapon.type];
+        // 🔊 Sons de disparo por tipo de arma
+        const soundKey = {
+            pistol: 'pistol_shot',
+            minigun: 'minigun_shot',
+            shotgun: 'shotgun_shot',
+            rifle: 'rifle_shot',
+            sniper: 'sniper_shot'
+        }[weapon.type];
 
-    if (soundKey) {
-        this.sound.play(soundKey, { volume: 0.2 });
-    }
+        if (soundKey) {
+            this.sound.play(soundKey, { volume: 0.2 });
+        }
 
-    // 🔫 Se for shotgun, gera vários projéteis
-    if (weapon.type === 'shotgun') {
-        const numPellets = 5;
-        for (let i = 0; i < numPellets; i++) {
-            const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, targetX, targetY);
-            const angleVariation = (Math.random() - 0.5) * (weapon.spread / 100);
-            const finalAngle = angle + angleVariation;
+        // 🔫 Se for shotgun, gera vários projéteis
+        if (weapon.type === 'shotgun') {
+            const numPellets = 5;
+            for (let i = 0; i < numPellets; i++) {
+                const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, targetX, targetY);
+                const angleVariation = (Math.random() - 0.5) * (weapon.spread / 100);
+                const finalAngle = angle + angleVariation;
 
-            const bullet = this.add.rectangle(this.player.x, this.player.y, 8, 3, 0xffff00);
+                const bullet = this.add.rectangle(this.player.x, this.player.y, 8, 3, 0xffff00);
+                this.physics.add.existing(bullet);
+                this.bullets.add(bullet);
+
+                bullet.body.setCollideWorldBounds(true);
+                bullet.body.onWorldBounds = true;
+
+                this.physics.velocityFromRotation(finalAngle, weapon.bulletSpeed, bullet.body.velocity);
+
+                this.time.delayedCall(1000, () => bullet.destroy());
+            }
+        } else {
+            // 🔫 Para armas normais
+            const bullet = this.add.rectangle(this.player.x, this.player.y, 10, 5, 0xffff00);
             this.physics.add.existing(bullet);
             this.bullets.add(bullet);
 
             bullet.body.setCollideWorldBounds(true);
             bullet.body.onWorldBounds = true;
 
-            this.physics.velocityFromRotation(finalAngle, weapon.bulletSpeed, bullet.body.velocity);
+            const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, targetX, targetY);
+            this.physics.velocityFromRotation(angle, weapon.bulletSpeed, bullet.body.velocity);
 
-            this.time.delayedCall(1000, () => bullet.destroy());
+            this.time.delayedCall(2000, () => bullet.destroy());
         }
-    } else {
-        // 🔫 Para armas normais
-        const bullet = this.add.rectangle(this.player.x, this.player.y, 10, 5, 0xffff00);
-        this.physics.add.existing(bullet);
-        this.bullets.add(bullet);
-
-        bullet.body.setCollideWorldBounds(true);
-        bullet.body.onWorldBounds = true;
-
-        const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, targetX, targetY);
-        this.physics.velocityFromRotation(angle, weapon.bulletSpeed, bullet.body.velocity);
-
-        this.time.delayedCall(2000, () => bullet.destroy());
     }
-}
 
 
     gameOver() {
@@ -582,11 +681,11 @@ export class SurvivalGame extends Phaser.Scene {
                     this.physics.moveToObject(zombie, this.player, zombie.speed);
                 }
             } else {
-                // 🔥 Movimento padrão dos outros zumbis (tank, fast)
+                // 🔥 Movimento padrão dos outros zumbis (tank, fast, boss)
                 this.physics.moveToObject(zombie, this.player, zombie.speed);
             }
 
-            // 🔥 Sistema de animação direcional
+            // 🔥 Sistema de animação direcional para todos os tipos
             const vx = zombie.body.velocity.x;
             const vy = zombie.body.velocity.y;
 
@@ -596,6 +695,8 @@ export class SurvivalGame extends Phaser.Scene {
                 this.simulateDirectionalAnimation(zombie, 'fast', vx, vy);
             } else if (zombie.type === "smart") {
                 this.simulateDirectionalAnimation(zombie, 'smart', vx, vy);
+            } else if (zombie.type === "boss") {
+                this.simulateDirectionalAnimation(zombie, 'boss', vx, vy);
             }
         });
     }
@@ -658,19 +759,10 @@ export class SurvivalGame extends Phaser.Scene {
         const edge = Phaser.Math.Between(0, 3);
         let x, y;
 
-        if (edge === 0) { // Topo
-            x = Phaser.Math.Between(0, this.physics.world.bounds.width);
-            y = -50;
-        } else if (edge === 1) { // Direita
-            x = this.physics.world.bounds.width + 50;
-            y = Phaser.Math.Between(0, this.physics.world.bounds.height);
-        } else if (edge === 2) { // Inferior
-            x = Phaser.Math.Between(0, this.physics.world.bounds.width);
-            y = this.physics.world.bounds.height + 50;
-        } else { // Esquerda
-            x = -50;
-            y = Phaser.Math.Between(0, this.physics.world.bounds.height);
-        }
+        if (edge === 0) { x = Phaser.Math.Between(0, this.physics.world.bounds.width); y = -50; }
+        else if (edge === 1) { x = this.physics.world.bounds.width + 50; y = Phaser.Math.Between(0, this.physics.world.bounds.height); }
+        else if (edge === 2) { x = Phaser.Math.Between(0, this.physics.world.bounds.width); y = this.physics.world.bounds.height + 50; }
+        else { x = -50; y = Phaser.Math.Between(0, this.physics.world.bounds.height); }
 
         // 🔥 Criação de zumbis por tipo
         if (type === "fast") {
@@ -679,39 +771,37 @@ export class SurvivalGame extends Phaser.Scene {
 
             zombie = this.physics.add.sprite(x, y, 'fast_down');
             zombie.setDisplaySize(16, 16);
-            zombie.setOrigin(0.5);
-
         } else if (type === "tank") {
             zombieSpeed *= 0.4;
             zombieHp = 8;
 
             zombie = this.physics.add.sprite(x, y, 'tank_down');
             zombie.setDisplaySize(32, 32);
-            zombie.setOrigin(0.5);
-
         } else if (type === "smart") {
             zombieSpeed *= 1.2;
             zombieHp = 3;
 
             zombie = this.physics.add.sprite(x, y, 'smart_down');
             zombie.setDisplaySize(16, 20);
-            zombie.setOrigin(0.5);
         }
 
-        // 🔥 Propriedades comuns para todos os zumbis
+        zombie.setOrigin(0.5);
+
+        // 🔥 Propriedades comuns
         zombie.hp = zombieHp;
         zombie.speed = zombieSpeed;
         zombie.type = type;
 
-        // 🔥 Controle de animação de movimentação
+        // 🔥 Controle de animação e hit
         zombie.frameToggleTime = 0;
         zombie.frameToggleState = false;
-
-        // 🔥 Controle de hit (tomando dano)
         zombie.isTakingDamage = false;
         zombie.hitFrameToggle = false;
 
-        // 🔥 Adiciona ao grupo de zumbis
+        // 🔥 Salva o tamanho original
+        zombie.originalWidth = zombie.displayWidth;
+        zombie.originalHeight = zombie.displayHeight;
+
         this.zombies.add(zombie);
     }
 
@@ -729,21 +819,25 @@ export class SurvivalGame extends Phaser.Scene {
             case 3: x = worldWidth + margin; y = Phaser.Math.Between(0, worldHeight); break;
         }
 
-        const boss = this.physics.add.sprite(x, y, 'bossZombie');
-        boss.setDisplaySize(48, 48); // maior que os outros
+        const boss = this.physics.add.sprite(x, y, 'boss_down');
+        boss.setDisplaySize(48, 48);
         boss.setOrigin(0.5);
-        boss.setTint(0x8b0000); // cor vermelha escura
 
         boss.hp = this.zombieBaseHp * 5;
         boss.speed = this.zombieBaseSpeed * 0.8;
         boss.type = "boss";
+
+        boss.frameToggleTime = 0;
+        boss.frameToggleState = false;
         boss.isTakingDamage = false;
         boss.hitFrameToggle = false;
+
+        boss.originalWidth = boss.displayWidth;
+        boss.originalHeight = boss.displayHeight;
 
         this.zombies.add(boss);
         boss.body.setCollideWorldBounds(true);
     }
-
     //Função que indentifica que o zumbie recebeu um hit
 
     hitZombie(bullet, zombie) {
@@ -755,8 +849,8 @@ export class SurvivalGame extends Phaser.Scene {
         this.money += 10;
 
         if (zombie.hp > 0) {
-            // 🔥 Animação de hit (tomando dano)
-            this.playZombieHitAnimation(zombie, 'tank');
+            // 🔥 Animação de hit (dinâmica)
+            this.playZombieHitAnimation(zombie, zombie.type);
 
             this.tweens.add({
                 targets: zombie,
@@ -838,38 +932,42 @@ export class SurvivalGame extends Phaser.Scene {
     //Função para dar animação do dano dependendo da posição do zumbie
 
     playZombieHitAnimation(zombie, baseKey) {
-        if (!zombie || !zombie.active || !zombie.texture || !zombie.texture.key) return;
+        if (!zombie || !zombie.active) return;
 
         zombie.isTakingDamage = true;
 
+        const currentWidth = zombie.originalWidth;
+        const currentHeight = zombie.originalHeight;
+
+        // 🧠 Detecta direção
         let direction = '';
         const textureKey = zombie.texture.key;
 
         if (textureKey.includes('left')) direction = 'left';
         else if (textureKey.includes('right')) direction = 'right';
         else if (textureKey.includes('up')) direction = 'up';
-        else direction = 'down'; // padrão
+        else direction = 'down';
 
         const next = zombie.hitFrameToggle
             ? `${baseKey}_${direction}_hit2`
             : `${baseKey}_${direction}_hit`;
 
         zombie.setTexture(next);
+        zombie.setDisplaySize(currentWidth, currentHeight);
         zombie.hitFrameToggle = !zombie.hitFrameToggle;
 
-        // Pisca mais uma vez no hit
         this.time.delayedCall(100, () => {
-            if (!zombie || !zombie.active || !zombie.texture || !zombie.texture.key) return;
+            if (!zombie || !zombie.active) return;
 
             const nextHit = zombie.hitFrameToggle
                 ? `${baseKey}_${direction}_hit2`
                 : `${baseKey}_${direction}_hit`;
 
             zombie.setTexture(nextHit);
+            zombie.setDisplaySize(currentWidth, currentHeight);
             zombie.hitFrameToggle = !zombie.hitFrameToggle;
         });
 
-        // Depois volta para animação normal
         this.time.delayedCall(200, () => {
             if (zombie && zombie.active) {
                 zombie.isTakingDamage = false;
@@ -877,15 +975,23 @@ export class SurvivalGame extends Phaser.Scene {
         });
     }
 
+    fixSpriteScale(sprite) {
+        sprite.setDisplaySize(sprite.displayWidth, sprite.displayHeight);
+    }
     //Função para adicionar a troca de png dos zumbies
 
     simulateDirectionalAnimation(zombie, baseKey, vx, vy) {
         const now = this.time.now;
+
+        const width = zombie.originalWidth;
+        const height = zombie.originalHeight;
+
         if (Math.abs(vx) > Math.abs(vy)) {
             if (vx > 0) {
                 if (now > zombie.frameToggleTime) {
                     const next = zombie.frameToggleState ? `${baseKey}_right2` : `${baseKey}_right`;
                     zombie.setTexture(next);
+                    zombie.setDisplaySize(width, height);
                     zombie.frameToggleState = !zombie.frameToggleState;
                     zombie.frameToggleTime = now + 500;
                 }
@@ -893,6 +999,7 @@ export class SurvivalGame extends Phaser.Scene {
                 if (now > zombie.frameToggleTime) {
                     const next = zombie.frameToggleState ? `${baseKey}_left2` : `${baseKey}_left`;
                     zombie.setTexture(next);
+                    zombie.setDisplaySize(width, height);
                     zombie.frameToggleState = !zombie.frameToggleState;
                     zombie.frameToggleTime = now + 500;
                 }
@@ -902,6 +1009,7 @@ export class SurvivalGame extends Phaser.Scene {
                 if (now > zombie.frameToggleTime) {
                     const next = zombie.frameToggleState ? `${baseKey}_down2` : `${baseKey}_down`;
                     zombie.setTexture(next);
+                    zombie.setDisplaySize(width, height);
                     zombie.frameToggleState = !zombie.frameToggleState;
                     zombie.frameToggleTime = now + 500;
                 }
@@ -909,11 +1017,13 @@ export class SurvivalGame extends Phaser.Scene {
                 if (now > zombie.frameToggleTime) {
                     const next = zombie.frameToggleState ? `${baseKey}_up2` : `${baseKey}_up`;
                     zombie.setTexture(next);
+                    zombie.setDisplaySize(width, height);
                     zombie.frameToggleState = !zombie.frameToggleState;
                     zombie.frameToggleTime = now + 500;
                 }
             }
         }
+        if (zombie.isTakingDamage) return;
     }
 
     // 7. Funções de Timer e Spawners
