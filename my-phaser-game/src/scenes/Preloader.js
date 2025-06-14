@@ -81,8 +81,8 @@ export class Preloader extends Scene {
         this.load.image('tank_right_hit2', '/zombies/tank_right_hit2.png');
 
         //Imagens do Zombie fast
-        // 👉 Carregar as imagens dos zumbis fast
-        // 🔽 Down
+        // Carregar as imagens dos zumbis fast
+        // Down
         this.load.image('fast_down', '/zombies/fast_down.png');
         this.load.image('fast_down2', '/zombies/fast_down2.png');
         this.load.image('fast_down_hit', '/zombies/fast_down_hit.png');
@@ -142,18 +142,24 @@ export class Preloader extends Scene {
         this.load.image("cutscene3", "imagens/cutscene3.png");
         this.load.image("cutscene4", "imagens/cutscene4.png");
 
-        // musica cutscene
+        //Efeitos sonoros
         this.load.audio("cutsceneMusic", "audio/cutscene-theme.mp3");
         this.load.audio("gritinho", "audio/grito.mp3");
         this.load.audio("alarme", "audio/alarm.mp3");
         this.load.audio("zumbi", "audio/zombieSound.mp3");
-
-        //sons armas
         this.load.audio("pistol_shot", "audio/pistol.ogg");
         this.load.audio("minigun_shot", "audio/minigun.mp3");
         this.load.audio("shotgun_shot", "audio/shotgun.wav");
         this.load.audio("rifle_shot", "audio/rifle.wav");
         this.load.audio("sniper_shot", "audio/sniper.wav");
+        this.load.audio("minigun_shot", "audio/minigun.wav");
+        this.load.audio("survivalMusic", "audio/survival.mp3");
+        this.load.audio("gameOverMusic", "audio/emorreu.mp3");
+        this.load.audio("clickButton", "audio/button.wav");
+        this.load.audio("ouch", "audio/ouch.mp3");
+        this.load.audio("error", "audio/error.mp3");
+        this.load.audio("gunload", "audio/gunload.mp3");
+        this.load.audio("upgrade", "audio/upgrade.mp3");
     }
 
     create() {
