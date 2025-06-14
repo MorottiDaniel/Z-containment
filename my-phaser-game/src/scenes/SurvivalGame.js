@@ -145,7 +145,7 @@ export class SurvivalGame extends Phaser.Scene {
         this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
         this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
         this.cameras.main.startFollow(this.player);
-        this.cameras.main.setZoom(1);
+        this.cameras.main.setZoom(2);
 
         // Modificando cursor do mouse
         this.input.setDefaultCursor('url(assets/imagens/crosshair.png) 32 32, pointer');
@@ -517,10 +517,19 @@ export class SurvivalGame extends Phaser.Scene {
 
     moveZombiesTowardsPlayer() {
         this.zombies.children.iterate((zombie) => {
+            if (!zombie.active) return;
+
+            // 🔥 Zumbi inteligente (smart) com desvio de obstáculos
             if (zombie.type === "smart") {
                 const angleToPlayer = Phaser.Math.Angle.Between(zombie.x, zombie.y, this.player.x, this.player.y);
                 const distanceToPlayer = Phaser.Math.Distance.Between(zombie.x, zombie.y, this.player.x, this.player.y);
-                const ray = new Phaser.Geom.Line(zombie.x, zombie.y, zombie.x + Math.cos(angleToPlayer) * distanceToPlayer, zombie.y + Math.sin(angleToPlayer) * distanceToPlayer);
+
+                const ray = new Phaser.Geom.Line(
+                    zombie.x, zombie.y,
+                    zombie.x + Math.cos(angleToPlayer) * distanceToPlayer,
+                    zombie.y + Math.sin(angleToPlayer) * distanceToPlayer
+                );
+
                 let hit = false;
                 this.obstacles.children.iterate((obstacle) => {
                     if (Phaser.Geom.Intersects.LineToRectangle(ray, obstacle.getBounds())) {
@@ -528,6 +537,7 @@ export class SurvivalGame extends Phaser.Scene {
                         return false;
                     }
                 });
+
                 if (hit) {
                     const perpendicularAngle = angleToPlayer + Math.PI / 2;
                     this.physics.velocityFromRotation(perpendicularAngle, zombie.speed, zombie.body.velocity);
@@ -535,12 +545,20 @@ export class SurvivalGame extends Phaser.Scene {
                     this.physics.moveToObject(zombie, this.player, zombie.speed);
                 }
             } else {
+                // 🔥 Movimento padrão dos outros zumbis (tank, fast)
                 this.physics.moveToObject(zombie, this.player, zombie.speed);
             }
+
+            // 🔥 Sistema de animação direcional
+            const vx = zombie.body.velocity.x;
+            const vy = zombie.body.velocity.y;
+
             if (zombie.type === "tank") {
-                const vx = zombie.body.velocity.x;
-                const vy = zombie.body.velocity.y;
                 this.simulateDirectionalAnimation(zombie, 'tank', vx, vy);
+            } else if (zombie.type === "fast") {
+                this.simulateDirectionalAnimation(zombie, 'fast', vx, vy);
+            } else if (zombie.type === "smart") {
+                this.simulateDirectionalAnimation(zombie, 'smart', vx, vy);
             }
         });
     }
@@ -599,40 +617,64 @@ export class SurvivalGame extends Phaser.Scene {
         let zombieHp = this.zombieBaseHp;
         let zombie;
 
-        // Define a posição do zumbi na borda do mapa
+        // 🔥 Define posição nas bordas do mapa
         const edge = Phaser.Math.Between(0, 3);
         let x, y;
-        if (edge === 0) { x = Phaser.Math.Between(0, this.physics.world.bounds.width); y = -50; }
-        else if (edge === 1) { x = this.physics.world.bounds.width + 50; y = Phaser.Math.Between(0, this.physics.world.bounds.height); }
-        else if (edge === 2) { x = Phaser.Math.Between(0, this.physics.world.bounds.width); y = this.physics.world.bounds.height + 50; }
-        else { x = -50; y = Phaser.Math.Between(0, this.physics.world.bounds.height); }
 
+        if (edge === 0) { // Topo
+            x = Phaser.Math.Between(0, this.physics.world.bounds.width);
+            y = -50;
+        } else if (edge === 1) { // Direita
+            x = this.physics.world.bounds.width + 50;
+            y = Phaser.Math.Between(0, this.physics.world.bounds.height);
+        } else if (edge === 2) { // Inferior
+            x = Phaser.Math.Between(0, this.physics.world.bounds.width);
+            y = this.physics.world.bounds.height + 50;
+        } else { // Esquerda
+            x = -50;
+            y = Phaser.Math.Between(0, this.physics.world.bounds.height);
+        }
+
+        // 🔥 Criação de zumbis por tipo
         if (type === "fast") {
             zombieSpeed *= 1.5;
             zombieHp = 1;
-            const color = 0xffa500;
-            zombie = this.add.rectangle(x, y, 16, 16, color);
-            this.physics.add.existing(zombie);
+
+            zombie = this.physics.add.sprite(x, y, 'fast_down');
+            zombie.setDisplaySize(16, 16);
+            zombie.setOrigin(0.5);
+
         } else if (type === "tank") {
             zombieSpeed *= 0.4;
             zombieHp = 8;
+
             zombie = this.physics.add.sprite(x, y, 'tank_down');
             zombie.setDisplaySize(32, 32);
-            zombie.frameToggleTime = 0;
-            zombie.frameToggleState = false;
+            zombie.setOrigin(0.5);
+
         } else if (type === "smart") {
             zombieSpeed *= 1.2;
             zombieHp = 3;
-            const color = 0x00ffff;
-            zombie = this.add.rectangle(x, y, 16, 16, color);
-            this.physics.add.existing(zombie);
-        } else {
-            zombie = this.add.rectangle(x, y, 16, 16, 0xff0000);
-            this.physics.add.existing(zombie);
+
+            zombie = this.physics.add.sprite(x, y, 'smart_down');
+            zombie.setDisplaySize(16, 20);
+            zombie.setOrigin(0.5);
         }
+
+        // 🔥 Propriedades comuns para todos os zumbis
         zombie.hp = zombieHp;
         zombie.speed = zombieSpeed;
         zombie.type = type;
+
+        // 🔥 Controle de animação de movimentação
+        zombie.frameToggleTime = 0;
+        zombie.frameToggleState = false;
+
+        // 🔥 Controle de hit (tomando dano)
+        zombie.isTakingDamage = false;
+        zombie.hitFrameToggle = false;
+
+        // 🔥 Adiciona ao grupo de zumbis
         this.zombies.add(zombie);
     }
 
@@ -650,34 +692,155 @@ export class SurvivalGame extends Phaser.Scene {
             case 3: x = worldWidth + margin; y = Phaser.Math.Between(0, worldHeight); break;
         }
 
-        const boss = this.add.rectangle(this.physics.world.bounds.width / 2, this.physics.world.bounds.height / 2, 32, 32, 0x8b0000);
-        this.physics.add.existing(boss);
+        const boss = this.physics.add.sprite(x, y, 'bossZombie');
+        boss.setDisplaySize(48, 48); // maior que os outros
+        boss.setOrigin(0.5);
+        boss.setTint(0x8b0000); // cor vermelha escura
+
+        boss.hp = this.zombieBaseHp * 5;
+        boss.speed = this.zombieBaseSpeed * 0.8;
+        boss.type = "boss";
+        boss.isTakingDamage = false;
+        boss.hitFrameToggle = false;
+
         this.zombies.add(boss);
         boss.body.setCollideWorldBounds(true);
-
-        boss.speed = this.zombieBaseSpeed * 0.8;
-        boss.hp = this.zombieBaseHp * 5;
-        boss.type = "smart";
-        boss.setScale(2);
     }
 
-    hitZombie(bullet, zombie) {
-        bullet.destroy();
-        zombie.hp -= this.weapons[this.currentWeaponIndex].damage;
-        this.money += 10; // Valor de dinheiro ganho por zumbi, ajuste como desejar
+    //Função que indentifica que o zumbie recebeu um hit
 
-        this.tweens.add({
-            targets: zombie,
-            alpha: 0.5,
-            duration: 100,
-            yoyo: true,
-        });
+    hitZombie(bullet, zombie) {
+        if (!zombie || !zombie.active) return;
+
+        bullet.destroy();
+
+        zombie.hp -= this.weapons[this.currentWeaponIndex].damage;
+        this.money += 10;
+
+        if (zombie.hp > 0) {
+            // 🔥 Animação de hit (tomando dano)
+            this.playZombieHitAnimation(zombie, 'tank');
+
+            this.tweens.add({
+                targets: zombie,
+                alpha: 0.5,
+                duration: 100,
+                yoyo: true,
+            });
+        }
+
         if (zombie.hp <= 0) {
-            zombie.destroy();
+            this.killZombie(zombie);
             this.score += 100;
             this.money += 100;
         }
     }
+
+    //Função auxiliar para fazer a troca de sangue
+    killZombie(zombie) {
+        if (zombie.body) {
+            zombie.body.setVelocity(0, 0);
+            zombie.body.enable = false;
+        }
+
+        const frames = ['blood_splash1', 'blood_splash2', 'blood_splash3'];
+        const blood = this.add.image(zombie.x, zombie.y, frames[0]);
+        blood.setDepth(1);
+        blood.setAngle(Phaser.Math.Between(0, 360));
+        blood.setScale(Phaser.Math.FloatBetween(0.8, 1.2));
+
+        let frameIndex = 0;
+
+        const splashAnimation = this.time.addEvent({
+            delay: 250,
+            repeat: frames.length - 2,
+            callback: () => {
+                frameIndex++;
+                blood.setTexture(frames[frameIndex]);
+            }
+        });
+
+        this.time.delayedCall(2000, () => {
+            blood.destroy();
+        });
+
+        zombie.destroy();
+    }
+
+    //Função de animação do sangue quando os zumbies morrem
+    spawnBloodEffect(x, y) {
+        const tileSize = 16;
+        const bloodX = Math.floor(x / tileSize) * tileSize + tileSize / 2;
+        const bloodY = Math.floor(y / tileSize) * tileSize + tileSize / 2;
+
+        const frames = ['blood_splash1', 'blood_splash2', 'blood_splash3'];
+        const blood = this.add.image(bloodX, bloodY, frames[0]);
+        blood.setOrigin(0.5, 0.5);
+        blood.setScale(1);
+        blood.setAlpha(1);
+        blood.setDepth(-1);
+
+        let frameIndex = 0;
+
+        this.time.addEvent({
+            delay: 100,
+            repeat: frames.length - 1,
+            callback: () => {
+                frameIndex++;
+                if (frameIndex < frames.length) {
+                    blood.setTexture(frames[frameIndex]);
+                }
+            }
+        });
+
+        this.time.delayedCall(2000, () => {
+            blood.destroy();
+        });
+    }
+
+    //Função para dar animação do dano dependendo da posição do zumbie
+
+    playZombieHitAnimation(zombie, baseKey) {
+        if (!zombie || !zombie.active || !zombie.texture || !zombie.texture.key) return;
+
+        zombie.isTakingDamage = true;
+
+        let direction = '';
+        const textureKey = zombie.texture.key;
+
+        if (textureKey.includes('left')) direction = 'left';
+        else if (textureKey.includes('right')) direction = 'right';
+        else if (textureKey.includes('up')) direction = 'up';
+        else direction = 'down'; // padrão
+
+        const next = zombie.hitFrameToggle
+            ? `${baseKey}_${direction}_hit2`
+            : `${baseKey}_${direction}_hit`;
+
+        zombie.setTexture(next);
+        zombie.hitFrameToggle = !zombie.hitFrameToggle;
+
+        // Pisca mais uma vez no hit
+        this.time.delayedCall(100, () => {
+            if (!zombie || !zombie.active || !zombie.texture || !zombie.texture.key) return;
+
+            const nextHit = zombie.hitFrameToggle
+                ? `${baseKey}_${direction}_hit2`
+                : `${baseKey}_${direction}_hit`;
+
+            zombie.setTexture(nextHit);
+            zombie.hitFrameToggle = !zombie.hitFrameToggle;
+        });
+
+        // Depois volta para animação normal
+        this.time.delayedCall(200, () => {
+            if (zombie && zombie.active) {
+                zombie.isTakingDamage = false;
+            }
+        });
+    }
+
+    //Função para adicionar a troca de png dos zumbies
 
     simulateDirectionalAnimation(zombie, baseKey, vx, vy) {
         const now = this.time.now;
