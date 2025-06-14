@@ -18,10 +18,10 @@ export class Preloader extends Scene {
             })
             .setOrigin(0.5);
 
-        // Barra de fundo 
+        // Barra de fundo
         this.add.rectangle(960, 540, 400, 30, 0x222222).setOrigin(0.5);
 
-        // Barra de progresso 
+        // Barra de progresso
         const progressBar = this.add
             .rectangle(760, 540, 0, 30, 0x00ff00)
             .setOrigin(0, 0.5);
@@ -49,15 +49,14 @@ export class Preloader extends Scene {
         this.load.tilemapTiledJSON("map", "mapa/map01.json");
 
         //Imagens do Zombie Tank
-        this.load.image('tank_right', '/zombies/tank_right.png');
-        this.load.image('tank_right2', '/zombies/tank_right2.png');
-        this.load.image('tank_left2', '/zombies/tank_left2.png');
-        this.load.image('tank_left', '/zombies/tank_left.png');
-        this.load.image('tank_up', '/zombies/tank_up.png');
-        this.load.image('tank_up2', '/zombies/tank_up2.png');
-        this.load.image('tank_down', '/zombies/tank_down.png');
-        this.load.image('tank_down2', '/zombies/tank_down2.png');
-        
+        this.load.image("tank_right", "/zombies/tank_right.png");
+        this.load.image("tank_right2", "/zombies/tank_right2.png");
+        this.load.image("tank_left2", "/zombies/tank_left2.png");
+        this.load.image("tank_left", "/zombies/tank_left.png");
+        this.load.image("tank_up", "/zombies/tank_up.png");
+        this.load.image("tank_up2", "/zombies/tank_up2.png");
+        this.load.image("tank_down", "/zombies/tank_down.png");
+        this.load.image("tank_down2", "/zombies/tank_down2.png");
 
         // Cutscenes
         this.load.image("cutscene1", "imagens/cutscene1.png");
@@ -70,6 +69,13 @@ export class Preloader extends Scene {
         this.load.audio("gritinho", "audio/grito.mp3");
         this.load.audio("alarme", "audio/alarm.mp3");
         this.load.audio("zumbi", "audio/zombieSound.mp3");
+
+        //sons armas
+        this.load.audio("pistol_shot", "audio/pistol.ogg");
+        this.load.audio("minigun_shot", "audio/minigun.mp3");
+        this.load.audio("shotgun_shot", "audio/shotgun.wav");
+        this.load.audio("rifle_shot", "audio/rifle.wav");
+        this.load.audio("sniper_shot", "audio/sniper.wav");
     }
 
     create() {
