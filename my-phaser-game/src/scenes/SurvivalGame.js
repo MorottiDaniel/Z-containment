@@ -40,6 +40,7 @@ export class SurvivalGame extends Phaser.Scene {
 
     // Função principal de criação da cena
     create() {
+        this.sound.play("survivalMusic", {volume: 0.2, loop: true});
         // Resetar vida máxima para o valor inicial ao iniciar a cena
         this.playerMaxHp = this.initialPlayerMaxHp;
 
@@ -50,7 +51,7 @@ export class SurvivalGame extends Phaser.Scene {
         this.round = 1;
         this.zombieBaseSpeed = 50;
         this.zombieBaseHp = 3;
-        this.money = 0;
+        this.money = 10000;
         this.weapons = [{ type: 'pistol', damage: 1, fireRate: 500, spread: 0, bulletSpeed: 500 }];
         this.currentWeaponIndex = 0;
         this.purchasedUpgrades = new Set();
@@ -287,6 +288,7 @@ export class SurvivalGame extends Phaser.Scene {
             if (this.currentUpgradeArea) {
                 const area = this.currentUpgradeArea;
                 if (this.purchasedUpgrades.has(area.upgradeType)) {
+                    this.sound.play("error", {volume: 0.2});
                     this.upgradeText.setText('Upgrade já comprado');
                     this.upgradeText.setPosition(this.player.x - 90, this.player.y - 50);
                     this.upgradeText.setVisible(true);
@@ -295,6 +297,7 @@ export class SurvivalGame extends Phaser.Scene {
                 }
                 if (this.money >= area.cost) {
                     this.money -= area.cost;
+                    this.sound.play("upgrade", {volume: 0.2});
                     this.purchasedUpgrades.add(area.upgradeType);
                     switch (area.upgradeType) {
                         case 'forca':
@@ -318,6 +321,7 @@ export class SurvivalGame extends Phaser.Scene {
                     this.upgradeText.setVisible(true);
                     this.time.delayedCall(1500, () => { this.upgradeText.setVisible(false); });
                 } else {
+                    this.sound.play("error", {volume: 0.2});
                     this.upgradeText.setText('Dinheiro insuficiente');
                     this.upgradeText.setPosition(this.player.x - 90, this.player.y - 50);
                     this.upgradeText.setVisible(true);
@@ -339,6 +343,7 @@ export class SurvivalGame extends Phaser.Scene {
                         sniper: { type: 'sniper', damage: 4, fireRate: 1500, spread: 0, bulletSpeed: 1000 }
                     }[area.weaponType];
                     if (this.weapons.length < 2) {
+                        this.sound.play("gunload", {volume: 0.2});
                         this.money -= area.cost;
                         this.weapons.push(weaponStats);
                         this.currentWeaponIndex = this.weapons.length - 1;
@@ -347,6 +352,7 @@ export class SurvivalGame extends Phaser.Scene {
                         this.upgradeText.setVisible(true);
                         this.time.delayedCall(1500, () => { this.upgradeText.setVisible(false); });
                     } else {
+                        this.sound.play("gunload", {volume: 0.2});
                         const oldWeaponType = this.weapons[this.currentWeaponIndex].type;
                         this.money -= area.cost;
                         this.weapons[this.currentWeaponIndex] = weaponStats;
@@ -356,6 +362,7 @@ export class SurvivalGame extends Phaser.Scene {
                         this.time.delayedCall(1500, () => { this.upgradeText.setVisible(false); });
                     }
                 } else {
+                    this.sound.play("error", {volume: 0.2});
                     this.upgradeText.setText('Dinheiro insuficiente');
                     this.upgradeText.setPosition(this.player.x - 90, this.player.y - 50);
                     this.upgradeText.setVisible(true);
@@ -478,6 +485,8 @@ export class SurvivalGame extends Phaser.Scene {
         this.playPlayerHitAnimation();
 
         // 🔥 Tween piscando
+        this.sound.play("ouch", {volume: 0.15});
+
         this.tweens.add({
             targets: player,
             alpha: 0.5,
@@ -585,6 +594,7 @@ export class SurvivalGame extends Phaser.Scene {
             this.time.delayedCall(2000, () => { this.upgradeText.setVisible(false); });
             return;
         }
+        this.sound.stopAll();
         this.scene.start("GameOver");
     }
 
