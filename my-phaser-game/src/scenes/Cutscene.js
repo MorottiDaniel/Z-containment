@@ -16,11 +16,17 @@ export class Cutscene extends Phaser.Scene {
     }
 
     create() {
+        // Música de fundo da cutscene
         this.cutsceneMusic = this.sound.add("cutsceneMusic", {
             loop: true,
             volume: 0.4,
         });
         this.cutsceneMusic.play();
+
+        // Efeitos sonoros (criados no início para poder parar a qualquer momento)
+        this.alarme = this.sound.add("alarme", { volume: 0.1 });
+        this.gritinho = this.sound.add("gritinho", { volume: 0.2 });
+        this.zumbi = this.sound.add("zumbi", { volume: 0.1 });
 
         const centerX = this.cameras.main.centerX;
         const centerY = this.cameras.main.centerY;
@@ -34,6 +40,7 @@ export class Cutscene extends Phaser.Scene {
 
         const images = ["cutscene1", "cutscene2", "cutscene3", "cutscene4"];
 
+        // Cria os slides e textos
         this.slides = images.map((key, i) =>
             this.add.image(centerX, centerY, key).setVisible(i === 0)
         );
@@ -52,9 +59,10 @@ export class Cutscene extends Phaser.Scene {
                 .setVisible(i === 0)
         );
 
+        // Avançar slide com clique
         this.input.on("pointerdown", () => this.nextSlide());
 
-        // Botão "Pular >>" no canto inferior direito
+        // Botão "Pular >>"
         this.add
             .text(this.scale.width - 20, this.scale.height - 20, "Pular >>", {
                 fontSize: "24px",
@@ -63,9 +71,14 @@ export class Cutscene extends Phaser.Scene {
                 backgroundColor: "#000000aa",
                 padding: { x: 12, y: 6 },
             })
-            .setOrigin(1) // âncora inferior direita
+            .setOrigin(1)
             .setInteractive()
-            .on("pointerdown", () => this.scene.start("MainMenu"));
+            .on("pointerdown", () => {
+                this.currentSlideIndex=4;
+                this.stopAllEffects(); // Para apenas os efeitos sonoros
+                this.sound.play("clickButton", {volume: 0.2});
+                this.scene.start("MainMenu"); // Vai para o menu
+            });
     }
 
     nextSlide() {
@@ -74,19 +87,28 @@ export class Cutscene extends Phaser.Scene {
         this.currentSlideIndex++;
 
         if (this.currentSlideIndex >= this.slides.length) {
+            this.stopAllEffects();
             this.scene.start("MainMenu");
         } else {
             this.slides[this.currentSlideIndex].setVisible(true);
             this.texts[this.currentSlideIndex].setVisible(true);
 
-            // EFEITOS SONOROS POR CENA
+            // Ativa efeitos sonoros por slide
             if (this.currentSlideIndex === 1) {
-                this.sound.play("alarme", { volume: 0.1 });
-                this.sound.play("gritinho", { volume: 0.2 });
+                this.alarme.play();
+                this.gritinho.play();
             }
+
             if (this.currentSlideIndex === 2) {
-                this.sound.play("zumbi", {volume: 0.1, loop: true});
+                this.zumbi.play();
             }
         }
+    }
+
+    // Função que para apenas os efeitos (não para a música da cutscene)
+    stopAllEffects() {
+        if (this.alarme && this.alarme.isPlaying) this.alarme.stop();
+        if (this.gritinho && this.gritinho.isPlaying) this.gritinho.stop();
+        if (this.zumbi && this.zumbi.isPlaying) this.zumbi.stop();
     }
 }

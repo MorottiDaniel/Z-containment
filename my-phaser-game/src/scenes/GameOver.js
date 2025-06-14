@@ -6,6 +6,8 @@ export class GameOver extends Scene {
     }
 
     create() {
+        this.sound.play("gameOverMusic", {volume: 0.3});
+
         // Centraliza a imagem de fundo em 1920x1080 e ajusta o tamanho para cobrir a tela
         this.add.image(1920 / 2, 1080 / 2, "gover-background").setDisplaySize(1920, 1080);
 
@@ -41,6 +43,8 @@ export class GameOver extends Scene {
 
         // Ao clicar no botão, volta para o menu principal
         retryButton.on("pointerdown", () => {
+            this.sound.stopAll();
+            this.sound.play("clickButton", {volume: 0.1});
             this.scene.stop("SurvivalGame");
             this.scene.start("SurvivalGame");
         });

@@ -46,6 +46,7 @@ export class MainMenu extends Scene {
 
         playButton.on("pointerdown", () => {
             this.sound.stopAll(); // Para toda música e efeitos
+            this.sound.play("clickButton", {volume: 0.2});
             this.scene.start("SurvivalGame");
         });
     }
