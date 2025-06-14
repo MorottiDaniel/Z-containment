@@ -128,12 +128,52 @@ export class Preloader extends Scene {
 
         this.load.image('fastZombie', '/zombies/fast.png');
         this.load.image('smartZombie', '/zombies/smart.png');
-        this.load.image('bossZombie', '/zombies/boss.png');
 
         //Imagem do sangue quando os zumbies morrem
         this.load.image('blood_splash1', '/effects/blood_splash1.png');
         this.load.image('blood_splash2', '/effects/blood_splash2.png');
         this.load.image('blood_splash3', '/effects/blood_splash3.png');
+
+        // 🔥 Player
+        this.load.image('player_down', '/player/player_down.png');
+        this.load.image('player_down2', '/player/player_down2.png');
+        this.load.image('player_up', '/player/player_up.png');
+        this.load.image('player_up2', '/player/player_up2.png');
+        this.load.image('player_left', '/player/player_left.png');
+        this.load.image('player_left2', '/player/player_left2.png');
+        this.load.image('player_right', '/player/player_right.png');
+        this.load.image('player_right2', '/player/player_right2.png');
+        this.load.image('player_parado_down', '/player/player_parado_down.png');
+        this.load.image('player_parado_up', '/player/player_parado_up.png');
+        this.load.image('player_parado_left', '/player/player_parado_left.png');
+        this.load.image('player_parado_right', '/player/player_parado_right.png');
+        this.load.image('player_hit_down1', '/player/player_hit_down.png');
+        this.load.image('player_hit_down2', '/player/player_hit_down2.png');
+        this.load.image('player_hit_up1', '/player/player_hit_up.png');
+        this.load.image('player_hit_up2', '/player/player_hit_up2.png');
+        this.load.image('player_hit_left1', '/player/player_hit_left.png');
+        this.load.image('player_hit_left2', '/player/player_hit_left2.png');
+        this.load.image('player_hit_right1', '/player/player_hit_right.png');
+        this.load.image('player_hit_right2', '/player/player_hit_right2.png');
+
+        //Animação do Boss
+        this.load.image('boss_down', '/zombies/boss_down.png');
+        this.load.image('boss_down2', '/zombies/boss_down2.png');
+        this.load.image('boss_up', '/zombies/boss_up.png');
+        this.load.image('boss_up2', '/zombies/boss_up2.png');
+        this.load.image('boss_left', '/zombies/boss_left.png');
+        this.load.image('boss_left2', '/zombies/boss_left2.png');
+        this.load.image('boss_right', '/zombies/boss_right.png');
+        this.load.image('boss_right2', '/zombies/boss_right2.png');
+        // Boss - Animações de hit (levando dano)
+        this.load.image('boss_down_hit', 'zombies/boss_down_hit.png');
+        this.load.image('boss_down_hit2', 'zombies/boss_down_hit2.png');
+        this.load.image('boss_up_hit', 'zombies/boss_up_hit.png');
+        this.load.image('boss_up_hit2', 'zombies/boss_up_hit2.png');
+        this.load.image('boss_left_hit', 'zombies/boss_left_hit.png');
+        this.load.image('boss_left_hit2', 'zombies/boss_left_hit2.png');
+        this.load.image('boss_right_hit', 'zombies/boss_right_hit.png');
+        this.load.image('boss_right_hit2', 'zombies/boss_right_hit2.png');
 
 
         // Cutscenes
@@ -154,6 +194,19 @@ export class Preloader extends Scene {
         this.load.audio("shotgun_shot", "audio/shotgun.wav");
         this.load.audio("rifle_shot", "audio/rifle.wav");
         this.load.audio("sniper_shot", "audio/sniper.wav");
+
+
+        // Carregamento de Tilemap
+        this.load.image("tilesRefe", "/tilemaps/refere.png");
+        this.load.image("tilesPeks", "/perks/perks.png");
+        this.load.tilemapTiledJSON("map", "/tilemaps/mapa.json");
+
+        // Carregamento de ícones de perks
+        this.load.image('perk_forca', '/perks/doubletap.png');
+        this.load.image('perk_reviver', '/perks/revive.png');
+        this.load.image('perk_resistencia', '/perks/forca.png');
+        this.load.image('perk_velocidade', '/perks/speed.png');
+
     }
 
     create() {
