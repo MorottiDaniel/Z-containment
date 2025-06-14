@@ -400,40 +400,67 @@ export class SurvivalGame extends Phaser.Scene {
     }
 
     shootBullet() {
-        const currentTime = this.time.now;
-        const weapon = this.weapons[this.currentWeaponIndex];
-        if (currentTime < this.lastShotTime + weapon.fireRate) { return; }
-        this.lastShotTime = currentTime;
+    const currentTime = this.time.now;
+    const weapon = this.weapons[this.currentWeaponIndex];
 
-        const pointer = this.input.activePointer;
-        const targetX = pointer.worldX;
-        const targetY = pointer.worldY;
+    // Verifica tempo do último disparo (fireRate)
+    if (currentTime < this.lastShotTime + weapon.fireRate) {
+        return;
+    }
+    this.lastShotTime = currentTime;
 
-        if (weapon.type === 'shotgun') {
-            const numPellets = 5;
-            for (let i = 0; i < numPellets; i++) {
-                const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, targetX, targetY);
-                const angleVariation = (Math.random() - 0.5) * (weapon.spread / 100);
-                const finalAngle = angle + angleVariation;
-                const bullet = this.add.rectangle(this.player.x, this.player.y, 8, 3, 0xffff00);
-                this.physics.add.existing(bullet);
-                this.bullets.add(bullet);
-                bullet.body.setCollideWorldBounds(true);
-                bullet.body.onWorldBounds = true;
-                this.physics.velocityFromRotation(finalAngle, weapon.bulletSpeed, bullet.body.velocity);
-                this.time.delayedCall(1000, () => bullet.destroy());
-            }
-        } else {
-            const bullet = this.add.rectangle(this.player.x, this.player.y, 10, 5, 0xffff00);
+    const pointer = this.input.activePointer;
+    const targetX = pointer.worldX;
+    const targetY = pointer.worldY;
+
+    // 🔊 Sons de disparo por tipo de arma
+    const soundKey = {
+        pistol: 'pistol_shot',
+        minigun: 'minigun_shot',
+        shotgun: 'shotgun_shot',
+        rifle: 'rifle_shot',
+        sniper: 'sniper_shot'
+    }[weapon.type];
+
+    if (soundKey) {
+        this.sound.play(soundKey, { volume: 0.2 });
+    }
+
+    // 🔫 Se for shotgun, gera vários projéteis
+    if (weapon.type === 'shotgun') {
+        const numPellets = 5;
+        for (let i = 0; i < numPellets; i++) {
+            const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, targetX, targetY);
+            const angleVariation = (Math.random() - 0.5) * (weapon.spread / 100);
+            const finalAngle = angle + angleVariation;
+
+            const bullet = this.add.rectangle(this.player.x, this.player.y, 8, 3, 0xffff00);
             this.physics.add.existing(bullet);
             this.bullets.add(bullet);
+
             bullet.body.setCollideWorldBounds(true);
             bullet.body.onWorldBounds = true;
-            const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, targetX, targetY);
-            this.physics.velocityFromRotation(angle, weapon.bulletSpeed, bullet.body.velocity);
-            this.time.delayedCall(2000, () => bullet.destroy());
+
+            this.physics.velocityFromRotation(finalAngle, weapon.bulletSpeed, bullet.body.velocity);
+
+            this.time.delayedCall(1000, () => bullet.destroy());
         }
+    } else {
+        // 🔫 Para armas normais
+        const bullet = this.add.rectangle(this.player.x, this.player.y, 10, 5, 0xffff00);
+        this.physics.add.existing(bullet);
+        this.bullets.add(bullet);
+
+        bullet.body.setCollideWorldBounds(true);
+        bullet.body.onWorldBounds = true;
+
+        const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, targetX, targetY);
+        this.physics.velocityFromRotation(angle, weapon.bulletSpeed, bullet.body.velocity);
+
+        this.time.delayedCall(2000, () => bullet.destroy());
     }
+}
+
 
     gameOver() {
         if (this.canRevive && !this.revivedOnce) {
