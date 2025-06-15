@@ -6,14 +6,16 @@ export class MainMenu extends Scene {
     }
 
     create() {
-        
-        this.add.image(512, 384, "menu-background").setDisplaySize(1024, 768);
-        
+        // Imagem de fundo centralizada em 1920x1080 e redimensionada para cobrir a tela
+        this.add
+            .image(1920 / 2, 1080 / 2, "menu-background")
+            .setDisplaySize(1920, 1080);
+
         this.cameras.main.setBackgroundColor("#1a1a1a");
 
-        // Botão Jogar
+        // Botão Jogar centralizado horizontalmente e posicionado na parte inferior da tela
         const playButton = this.add
-            .text(512, 680, "▶ START", {
+            .text(1920 / 2, 1080 - 100, "▶ START", {
                 fontSize: "48px",
                 fontFamily: "Pixellari",
                 backgroundColor: "#007700",
@@ -34,15 +36,18 @@ export class MainMenu extends Scene {
             playButton.setStyle({ backgroundColor: "#007700" }); // Volta pro verde original
         });
 
-        // Créditos ou rodapé
+        // Texto de rodapé centralizado horizontalmente e próximo ao rodapé
         this.add
-            .text(512, 745, "Aperte para sobreviver...", {
+            .text(1920 / 2, 1080 - 40, "Aperte para sobreviver...", {
                 fontSize: "20px",
                 color: "#888",
             })
             .setOrigin(0.5);
-            playButton.on('pointerdown', () => {
-            this.scene.start('SurvivalGame');
+
+        playButton.on("pointerdown", () => {
+            this.sound.stopAll(); // Para toda música e efeitos
+            this.sound.play("clickButton", {volume: 0.2});
+            this.scene.start("SurvivalGame");
         });
     }
 }
