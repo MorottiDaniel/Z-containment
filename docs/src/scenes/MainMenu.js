@@ -15,7 +15,7 @@ export class MainMenu extends Scene {
 
         // Botão Jogar centralizado horizontalmente e posicionado na parte inferior da tela
         const playButton = this.add
-            .text(1920 / 2, 1080 - 100, "▶ START", {
+            .text(1920 / 2, 1080 - 100, "▶ PLAY", {
                 fontSize: "48px",
                 fontFamily: "Pixellari",
                 backgroundColor: "#007700",

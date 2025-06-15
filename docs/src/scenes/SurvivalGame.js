@@ -240,29 +240,53 @@ export class SurvivalGame extends Phaser.Scene {
     }
 
     createUI() {
-        this.healthBarBg = this.add
-            .rectangle(20, 20, 104, 14, 0x000000)
-            .setScrollFactor(0)
-            .setOrigin(0);
-        this.healthBar = this.add
-            .rectangle(22, 22, 100, 10, 0xff0000)
-            .setScrollFactor(0)
-            .setOrigin(0);
-        this.scoreText = this.add
-            .text(20, 40, "Pontos: 0", { fontSize: "16px", fill: "#ffffff" })
-            .setScrollFactor(0);
+        const cam = this.cameras.main;
+
+        // 🔳 Caixa de fundo menor
+        this.uiBg = this.add
+            .rectangle(0, 0, 160, 80, 0x000000, 0.6)
+            .setOrigin(0, 0)
+            .setDepth(1000);
+        this.uiBg.setStrokeStyle(2, 0x800000);
+
+        const textStyle = {
+            fontSize: "12px",
+            fontFamily: "Pixellari",
+            color: "#ffffff",
+            stroke: "#000000",
+            strokeThickness: 2,
+        };
+
+        // 🧟 Round
         this.roundText = this.add
-            .text(20, 60, "Round: 1", { fontSize: "16px", fill: "#ffffff" })
-            .setScrollFactor(0);
+            .text(0, 0, `🧟 ${this.round}`, textStyle)
+            .setOrigin(0, 0)
+            .setDepth(1000);
+
+        // 🎯 Pontuação
+        this.scoreText = this.add
+            .text(0, 0, `🎯 ${this.score}`, textStyle)
+            .setOrigin(0, 0)
+            .setDepth(1000);
+
+        // 💰 Ouro
         this.moneyText = this.add
-            .text(20, 80, "Dinheiro: 0", { fontSize: "16px", fill: "#ffffff" })
-            .setScrollFactor(0);
+            .text(0, 0, `💰 ${this.money}`, { ...textStyle, color: "#ffff00" })
+            .setOrigin(0, 0)
+            .setDepth(1000);
+
+        // 🔫 Arma atual
         this.weaponText = this.add
-            .text(20, 100, "Arma: Pistol", {
-                fontSize: "16px",
-                fill: "#ffffff",
-            })
-            .setScrollFactor(0);
+            .text(
+                0,
+                0,
+                `🔫 ${this.weapons[this.currentWeaponIndex].type}`,
+                textStyle
+            )
+            .setOrigin(0, 0)
+            .setDepth(1000);
+
+        this.updateUIPosition();
 
         this.perkIcons = [];
         this.perkIconStartX = 20;
@@ -313,6 +337,19 @@ export class SurvivalGame extends Phaser.Scene {
             )
             .setScrollFactor(0)
             .setOrigin(0.5);
+    }
+    //Funcao para Hud de estaticas seguir a visao do player
+    updateUIPosition() {
+        const cam = this.cameras.main;
+
+        const offsetX = cam.midPoint.x - cam.displayWidth / 2 + 10;
+        const offsetY = cam.midPoint.y - cam.displayHeight / 2 + 10;
+
+        this.uiBg.setPosition(offsetX, offsetY);
+        this.roundText.setPosition(offsetX + 8, offsetY + 6);
+        this.scoreText.setPosition(offsetX + 8, offsetY + 22);
+        this.moneyText.setPosition(offsetX + 8, offsetY + 38);
+        this.weaponText.setPosition(offsetX + 8, offsetY + 54);
     }
 
     createUpgradeAreas() {
@@ -429,10 +466,10 @@ export class SurvivalGame extends Phaser.Scene {
             area.cost = data.cost;
             area.upgradeType = data.upgrade;
             area.upgradeName = {
-                forca: "double hit",
-                reviver: "quick resurrect",
-                resistencia: "juggermax",
-                recarga: "fast chug",
+                forca: "Tiro Duplo",
+                reviver: "Ressurgimento",
+                resistencia: "Vida Máxima",
+                recarga: "Aumento de velocidade",
             }[data.upgrade];
             area.message = `pressione E para ${area.upgradeName} (${area.cost})`;
             this.upgradeAreas.push(area);
@@ -982,19 +1019,16 @@ export class SurvivalGame extends Phaser.Scene {
         this.handlePlayerMovement();
         this.moveZombiesTowardsPlayer();
         this.updateUI(); // Atualiza elementos da UI
+        this.updateUIPosition(); // Faz o HUD seguir a câmera mesmo com zoom
         this.checkUpgradeAreaOverlap(); // Verifica sobreposição com áreas de perk
         this.checkWeaponAreaOverlap(); // Verifica sobreposição com áreas de arma
         this.elapsedTime = Math.floor((this.time.now - this.startTime) / 1000); // Tempo em segundos
     }
 
     updateUI() {
-        this.healthBar.width = (this.playerHp / this.playerMaxHp) * 100;
-        this.scoreText.setText("Pontos: " + this.score);
-        this.roundText.setText("Round: " + this.round);
-        this.moneyText.setText("Dinheiro: " + this.money);
-        this.weaponText.setText(
-            `Arma: ${this.weapons[this.currentWeaponIndex].type}`
-        );
+        this.roundText.setText(` Rounds: ${this.round}`);
+        this.scoreText.setText(` Pontuação: ${this.score}`);
+        this.moneyText.setText(` Ouro: ${this.money}`);
 
         const weapon1 = this.weapons[0];
         const weapon2 = this.weapons[1];
