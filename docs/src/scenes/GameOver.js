@@ -28,7 +28,7 @@ export class GameOver extends Scene {
 
         // Botão Retry
         const retryButton = this.add
-            .text(960, 645, "↻ RETRY", {
+            .text(960, 750, "RESTAR", {
                 fontSize: "28px",
                 fontFamily: "Pixellari",
                 backgroundColor: "#800000",
@@ -58,14 +58,14 @@ export class GameOver extends Scene {
 
         // Texto do rodape do botao retry
          this.add
-            .text(960, 680, "Tente Novamente...", {
+            .text(960, 790, "Tente Novamente...", {
                 fontSize: "17px",
                 color: "#888",
             })
             .setOrigin(0.5);
 
         // Caixa das Estatisticas
-        const statsBg = this.add.rectangle(960, 480, 510, 260, 0x000000, 0.6);
+        const statsBg = this.add.rectangle(960, 480, 500, 260, 0x000000, 0.6);
         statsBg.setStrokeStyle(4, 0x800000);
 
         // Estatisticas
@@ -97,12 +97,6 @@ export class GameOver extends Scene {
             })
             .setOrigin(0.5);
 
-        this.add
-            .text(960, 560, `Ouro Coletado: ${this.money}`, {
-                fontSize: "32px",
-                color: "#ffff00",
-            })
-            .setOrigin(0.5);
 
         // Clique no botão
         retryButton.on("pointerdown", () => {
