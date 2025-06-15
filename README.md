@@ -7,11 +7,11 @@ https://MorottiDaniel.github.io/Z-containment/
 
 ## 🎲 Funcionalidades Principais
 
-- ⚔️ Disparo automático em direção aos inimigos
+- ⚔️ Disparo com diferentes armas e upgrades do personagem
 - 🧟‍♂️ Geração e movimentação de zumbis com diferentes características
 - 💀 Sistema de rounds com dificuldade crescente
 - ❤️ Vida do jogador com 5 corações e sistema de pontos
-- 🕹️ Movimentação com teclas WASD ou setas
+- 🕹️ Movimentação com teclas WASD
 
 ## 🛠️ Tecnologias Utilizadas
 
