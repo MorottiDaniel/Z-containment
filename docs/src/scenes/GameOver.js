@@ -5,16 +5,31 @@ export class GameOver extends Scene {
         super("GameOver"); // Nome da cena
     }
 
+    init(data) {
+        // Recebe os dados da cena SurvivalGame
+        this.score = data.score || 0;
+        this.round = data.round || 1;
+        this.money = data.money || 0;
+        this.timeSurvived = data.timeSurvived || 0;
+    }
+
     create() {
-        this.sound.play("gameOverMusic", {volume: 0.3});
+        this.sound.play("gameOverMusic", { volume: 0.3 });
 
-        // Centraliza a imagem de fundo em 1920x1080 e ajusta o tamanho para cobrir a tela
-        this.add.image(1920 / 2, 1080 / 2, "gover-background").setDisplaySize(1920, 1080);
+        // Formata o tempo em minutos e segundos
+        const minutes = Math.floor(this.timeSurvived / 60);
+        const seconds = this.timeSurvived % 60;
+        const formattedTime = `${minutes}m ${seconds}s`;
 
-        // Botão retry centralizado na tela, um pouco abaixo do centro vertical
+        // Fundo
+        this.add
+            .image(1920 / 2, 1080 / 2, "gover-background")
+            .setDisplaySize(1920, 1080);
+
+        // Botão Retry
         const retryButton = this.add
-            .text(1920 / 2, 1080 / 2 + 50, "↻ RETRY", {
-                fontSize: "28px", // Mantém o tamanho da fonte
+            .text(960, 645, "↻ RETRY", {
+                fontSize: "28px",
                 fontFamily: "Pixellari",
                 backgroundColor: "#800000",
                 color: "#ffffff",
@@ -32,7 +47,7 @@ export class GameOver extends Scene {
             .setOrigin(0.5)
             .setInteractive();
 
-        // Hover com cor mais clara
+        // Hover do botão Retry
         retryButton.on("pointerover", () => {
             retryButton.setStyle({ backgroundColor: "#aa0000" });
         });
@@ -41,10 +56,58 @@ export class GameOver extends Scene {
             retryButton.setStyle({ backgroundColor: "#800000" });
         });
 
-        // Ao clicar no botão, volta para o menu principal
+        // Texto do rodape do botao retry
+         this.add
+            .text(960, 680, "Tente Novamente...", {
+                fontSize: "17px",
+                color: "#888",
+            })
+            .setOrigin(0.5);
+
+        // Caixa das Estatisticas
+        const statsBg = this.add.rectangle(960, 480, 510, 260, 0x000000, 0.6);
+        statsBg.setStrokeStyle(4, 0x800000);
+
+        // Estatisticas
+        this.add
+            .text(960, 380, `ESTATÍSTICAS`, {
+                fontSize: "32px",
+                color: "#ffffff",
+            })
+            .setOrigin(0.5);
+
+        this.add
+            .text(960, 430, `Pontos: ${this.score}`, {
+                fontSize: "32px",
+                color: "#ffffff",
+            })
+            .setOrigin(0.5);
+
+        this.add
+            .text(960, 480, `Rounds Sobrevividos: ${this.round}`, {
+                fontSize: "32px",
+                color: "#ffffff",
+            })
+            .setOrigin(0.5);
+
+        this.add
+            .text(960, 520, `Tempo Sobrevivido: ${formattedTime}`, {
+                fontSize: "32px",
+                color: "#ffffff",
+            })
+            .setOrigin(0.5);
+
+        this.add
+            .text(960, 560, `Ouro Coletado: ${this.money}`, {
+                fontSize: "32px",
+                color: "#ffff00",
+            })
+            .setOrigin(0.5);
+
+        // Clique no botão
         retryButton.on("pointerdown", () => {
             this.sound.stopAll();
-            this.sound.play("clickButton", {volume: 0.1});
+            this.sound.play("clickButton", { volume: 0.1 });
             this.scene.stop("SurvivalGame");
             this.scene.start("SurvivalGame");
         });
