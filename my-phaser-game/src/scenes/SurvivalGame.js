@@ -40,7 +40,7 @@ export class SurvivalGame extends Phaser.Scene {
 
     // Função principal de criação da cena
     create() {
-        this.sound.play("survivalMusic", {volume: 0.2, loop: true});
+        this.sound.play("survivalMusic", { volume: 0.2, loop: true });
         // Resetar vida máxima para o valor inicial ao iniciar a cena
         this.playerMaxHp = this.initialPlayerMaxHp;
 
@@ -63,8 +63,11 @@ export class SurvivalGame extends Phaser.Scene {
 
         // Configuração do Tilemap
         const map = this.make.tilemap({ key: "map" });
+        this.map = map;
         const tileset01 = map.addTilesetImage("Zombie_Tileset", "tilesRefe");
         const tileset02 = map.addTilesetImage("Perks", "tilesPeks");
+        // ----- CORREÇÃO AQUI -----
+        const tileset03 = map.addTilesetImage("armas_parede", "tilesArmas");
 
         // Encontrar ponto de spawn do jogador
         const spawnPoint = map.findObject("playe", obj => obj.name === "Spawn");
@@ -74,18 +77,24 @@ export class SurvivalGame extends Phaser.Scene {
         camdaLimite.setCollisionByProperty({ colisao: true });
         this.camadaLimite = camdaLimite; // Armazena para uso posterior
         const camadaChao = map.createLayer("Chao", tileset01, 0, 0);
-        const camadaObjetosColider = map.createLayer("ObjetosColider", tileset01, 0, 0);
-        camadaObjetosColider.setCollisionByProperty({ colisao: true });
-        this.camadaObjetosColider = camadaObjetosColider; // Armazena para uso posterior
         const camadaObjetosScolider = map.createLayer("ObjetosScolider", tileset01, 0, 0);
-        const camadaPerks01 = map.createLayer("Perks01", tileset02, 0, 0);
-        const camadaPerks02 = map.createLayer("Perks02", tileset02, 0, 0);
-        const camadaPerks03 = map.createLayer("Perks03", tileset02, 0, 0);
-        const camadaPerks04 = map.createLayer("Perks01", tileset02, 0, 0); // Verifique se isso não é um erro de digitação de camadaPerks04 para camadaPerks01
-        const camadaPorta01 = map.createLayer("Porta01", tileset01, 0, 0);
-        const camadaPorta02 = map.createLayer("Porta02", tileset01, 0, 0);
-        const camadaPorta03 = map.createLayer("Porta03", tileset01, 0, 0);
+        const camadaObjetosColider = map.createLayer("ObjetosColider", tileset01, 0, 0);
+        camadaObjetosColider.setDepth(10);
+        camadaObjetosColider.setCollisionByProperty({ colisao: true });
+        camadaObjetosColider.setCollisionByProperty({ colisao_p: true });
+        this.camadaObjetosColider = camadaObjetosColider; // Armazena para uso posterior
+
+        const camadaPerks = map.createLayer("Perks", tileset02, 0, 0);
+        camadaPerks.setCollisionByProperty({ colisao: true });
+        this.camadaPerks = camadaPerks;
+        camadaPerks.setDepth(10);
+
+        // Usa o tileset correto (tileset03) para criar a camada de armas
+        const camadaArmas = map.createLayer("Armas", tileset03, 0, 0);
+        camadaArmas.setDepth(10);
+
         const camadaAcessorios = map.createLayer("Acessorios", tileset01, 0, 0);
+        camadaAcessorios.setDepth(10);
 
 
         // Criação do jogador
@@ -132,7 +141,7 @@ export class SurvivalGame extends Phaser.Scene {
         this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
         this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
         this.cameras.main.startFollow(this.player);
-        this.cameras.main.setZoom(2);
+        this.cameras.main.setZoom(3.5);
 
         // Modificando cursor do mouse
         this.input.setDefaultCursor('url(assets/imagens/crosshair.png) 32 32, pointer');
@@ -143,6 +152,7 @@ export class SurvivalGame extends Phaser.Scene {
         this.player.setDisplaySize(16, 16);
         this.player.setOrigin(0.5);
         this.player.body.setCollideWorldBounds(true);
+        this.player.setDepth(5);
 
         // Controle de animação
         this.player.frameToggleTime = 0;
@@ -232,54 +242,143 @@ export class SurvivalGame extends Phaser.Scene {
 
     createUpgradeAreas() {
         this.upgradeAreas = [];
-        this.upgradeText = this.add.text(0, 0, '', {
-            fontSize: '18px',
-            fill: '#ffff00',
-            backgroundColor: '#000000',
-            padding: { x: 10, y: 5 }
-        }).setScrollFactor(1).setVisible(false);
 
+        // Texto flutuante sobre o jogador
+        this.upgradeText = this.add.text(0, 0, '', {
+            fontSize: '10px',
+            fill: '#ffff00',
+            backgroundColor: 'rgba(0, 0, 0, 0.1)',
+            padding: { x: 10, y: 5 }
+        }).setScrollFactor(1).setVisible(false).setDepth(20);
+
+        const perkPointReviver = this.map.findObject("perkPoint", obj => obj.name === "perk_reviver");
+        if (!perkPointReviver) {
+            console.error("ERRO: O objeto 'perk_reviver' não foi encontrado na camada 'perkPoint' do mapa.");
+            // Se você não encontrou, não adianta continuar, então saímos da função.
+            return;
+        }
+        const perkPointForca = this.map.findObject("perkPoint", obj => obj.name === "perk_forca");
+        if (!perkPointForca) {
+            console.error("ERRO: O objeto 'perk_forca' não foi encontrado na camada 'perkPoint' do mapa.");
+            // Se você não encontrou, não adianta continuar, então saímos da função.
+            return;
+        }
+        const perkPointResistencia = this.map.findObject("perkPoint", obj => obj.name === "perk_resistencia");
+        if (!perkPointResistencia) {
+            console.error("ERRO: O objeto 'perk_resistencia' não foi encontrado na camada 'perkPoint' do mapa.");
+            // Se você não encontrou, não adianta continuar, então saímos da função.
+            return;
+        }
+        const perkPointRecarga = this.map.findObject("perkPoint", obj => obj.name === "perk_recarga");
+        if (!perkPointRecarga) {
+            console.error("ERRO: O objeto 'perk_recarga' não foi encontrado na camada 'perkPoint' do mapa.");
+            // Se você não encontrou, não adianta continuar, então saímos da função.
+            return;
+        }
         const areaData = [
-            { x: 500, y: 400, cost: 2000, upgrade: 'forca' },
-            { x: 500, y: 500, cost: 1500, upgrade: 'reviver' },
-            { x: 500, y: 600, cost: 2500, upgrade: 'resistencia' },
-            { x: 500, y: 700, cost: 1000, upgrade: 'velocidade' }
+            {
+                x: perkPointForca.x,
+                y: perkPointForca.y,
+                width: perkPointForca.width,   // Usamos a largura do objeto do Tiled
+                height: perkPointForca.height,
+                cost: 2000,
+                upgrade: 'forca'
+            },
+            {
+                x: perkPointReviver.x,
+                y: perkPointReviver.y,
+                width: perkPointReviver.width,   // Usamos a largura do objeto do Tiled
+                height: perkPointReviver.height, // Usamos a altura do objeto do Tiled
+                cost: 1500,
+                upgrade: 'reviver'
+            },
+            {
+                x: perkPointResistencia.x,
+                y: perkPointResistencia.y,
+                width: perkPointResistencia.width,   // Usamos a largura do objeto do Tiled
+                height: perkPointResistencia.height,
+                cost: 2500,
+                upgrade: 'resistencia'
+            },
+
+            {
+                x: perkPointRecarga.x,
+                y: perkPointRecarga.y,
+                width: perkPointRecarga.width,   // Usamos a largura do objeto do Tiled
+                height: perkPointRecarga.height,
+                cost: 3000,
+                upgrade: 'recarga'
+            }
         ];
 
+        // 4. Criamos os retângulos usando os dados do array
         areaData.forEach((data) => {
-            const area = this.add.rectangle(data.x, data.y, 100, 100, 0xffffff, 0.2);
-            this.physics.add.existing(area, true);
+            // Usamos .setOrigin(0,0) para alinhar corretamente com a posição do Tiled
+            const area = this.add.rectangle(data.x, data.y, data.width, data.height, 0xffffff, 0.2)
+                .setOrigin(0, 0);
+
+            this.physics.add.existing(area, true); // true para ser estático
+
             area.cost = data.cost;
             area.upgradeType = data.upgrade;
             area.upgradeName = {
                 forca: 'double hit',
                 reviver: 'quick resurrect',
                 resistencia: 'juggermax',
-                velocidade: 'speed chug'
+                recarga: 'fast chug'
             }[data.upgrade];
-            area.message = `pressione E para ${area.upgradeName}, ${area.cost}`;
+            area.message = `pressione E para ${area.upgradeName} (${area.cost})`;
             this.upgradeAreas.push(area);
         });
+
         this.currentUpgradeArea = null;
     }
 
     createWeaponAreas() {
         this.weaponAreas = [];
-        const weaponData = [
-            { x: 700, y: 600, cost: 3000, weapon: 'minigun', color: 0xff0000 },
-            { x: 600, y: 600, cost: 2500, weapon: 'shotgun', color: 0x00ff00 },
-            { x: 900, y: 600, cost: 2000, weapon: 'rifle', color: 0x0000ff },
-            { x: 1000, y: 600, cost: 1500, weapon: 'sniper', color: 0x800080 }
+
+        // 1. Definimos os dados de cada arma.
+        //    O 'tiledName' deve ser EXATAMENTE igual ao nome do objeto no Tiled.
+        //    O 'internalName' é o que usamos internamente no jogo (ex: para as estatísticas).
+        const weaponDefinitions = [
+            { tiledName: 'sniper', internalName: 'sniper', cost: 1500 },
+            { tiledName: 'minigun', internalName: 'minigun', cost: 3000 },
+            { tiledName: 'doze', internalName: 'shotgun', cost: 2500 }, // Mapeando 'doze' para 'shotgun'
+            { tiledName: 'rifre', internalName: 'rifle', cost: 2000 }  // Mapeando 'rifre' para 'rifle'
         ];
-        weaponData.forEach((data) => {
-            const area = this.add.rectangle(data.x, data.y, 100, 100, 0x00ff00, 0.2);
-            this.physics.add.existing(area, true);
-            area.cost = data.cost;
-            area.weaponType = data.weapon;
-            area.icon = this.add.rectangle(data.x, data.y, 64, 64, data.color).setAlpha(0.8);
-            area.message = `pressione R para ${data.weapon}, ${data.cost}`;
+
+        // 2. Iteramos sobre cada definição para criar sua área de compra.
+        weaponDefinitions.forEach(def => {
+            // 3. Encontramos o objeto correspondente no mapa Tiled.
+            const weaponPoint = this.map.findObject("armaPoint", obj => obj.name === def.tiledName);
+
+            // Uma verificação de segurança, caso o objeto não seja encontrado.
+            if (!weaponPoint) {
+                console.error(`ERRO: O objeto de arma '${def.tiledName}' não foi encontrado na camada 'armaPoint' do mapa.`);
+                return; // Continua para a próxima arma na lista.
+            }
+
+            // 4. Criamos a área de trigger (um retângulo invisível) usando as coordenadas do Tiled.
+            const area = this.add.rectangle(
+                weaponPoint.x,
+                weaponPoint.y,
+                weaponPoint.width,
+                weaponPoint.height,
+                0x00ff00, // Cor verde para debug, pode remover a cor depois (deixar 0)
+                0.2       // Alfa para debug, pode ser 0 para ficar invisível
+            ).setOrigin(0, 0);
+
+            this.physics.add.existing(area, true); // Adiciona física estática à área
+
+            // 5. Anexamos as propriedades da arma à área, para usarmos na hora da compra.
+            area.cost = def.cost;
+            area.weaponType = def.internalName; // Usamos o nome interno consistente.
+            area.message = `Pressione R para comprar ${area.weaponType} (${area.cost})`;
+
+            // Adicionamos a área pronta ao nosso array de áreas de armas.
             this.weaponAreas.push(area);
         });
+
         this.currentWeaponArea = null;
     }
 
@@ -288,7 +387,7 @@ export class SurvivalGame extends Phaser.Scene {
             if (this.currentUpgradeArea) {
                 const area = this.currentUpgradeArea;
                 if (this.purchasedUpgrades.has(area.upgradeType)) {
-                    this.sound.play("error", {volume: 0.2});
+                    this.sound.play("error", { volume: 0.2 });
                     this.upgradeText.setText('Upgrade já comprado');
                     this.upgradeText.setPosition(this.player.x - 90, this.player.y - 50);
                     this.upgradeText.setVisible(true);
@@ -297,7 +396,7 @@ export class SurvivalGame extends Phaser.Scene {
                 }
                 if (this.money >= area.cost) {
                     this.money -= area.cost;
-                    this.sound.play("upgrade", {volume: 0.2});
+                    this.sound.play("upgrade", { volume: 0.2 });
                     this.purchasedUpgrades.add(area.upgradeType);
                     switch (area.upgradeType) {
                         case 'forca':
@@ -321,7 +420,7 @@ export class SurvivalGame extends Phaser.Scene {
                     this.upgradeText.setVisible(true);
                     this.time.delayedCall(1500, () => { this.upgradeText.setVisible(false); });
                 } else {
-                    this.sound.play("error", {volume: 0.2});
+                    this.sound.play("error", { volume: 0.2 });
                     this.upgradeText.setText('Dinheiro insuficiente');
                     this.upgradeText.setPosition(this.player.x - 90, this.player.y - 50);
                     this.upgradeText.setVisible(true);
@@ -343,7 +442,7 @@ export class SurvivalGame extends Phaser.Scene {
                         sniper: { type: 'sniper', damage: 4, fireRate: 1500, spread: 0, bulletSpeed: 1000 }
                     }[area.weaponType];
                     if (this.weapons.length < 2) {
-                        this.sound.play("gunload", {volume: 0.2});
+                        this.sound.play("gunload", { volume: 0.2 });
                         this.money -= area.cost;
                         this.weapons.push(weaponStats);
                         this.currentWeaponIndex = this.weapons.length - 1;
@@ -352,7 +451,7 @@ export class SurvivalGame extends Phaser.Scene {
                         this.upgradeText.setVisible(true);
                         this.time.delayedCall(1500, () => { this.upgradeText.setVisible(false); });
                     } else {
-                        this.sound.play("gunload", {volume: 0.2});
+                        this.sound.play("gunload", { volume: 0.2 });
                         const oldWeaponType = this.weapons[this.currentWeaponIndex].type;
                         this.money -= area.cost;
                         this.weapons[this.currentWeaponIndex] = weaponStats;
@@ -362,7 +461,7 @@ export class SurvivalGame extends Phaser.Scene {
                         this.time.delayedCall(1500, () => { this.upgradeText.setVisible(false); });
                     }
                 } else {
-                    this.sound.play("error", {volume: 0.2});
+                    this.sound.play("error", { volume: 0.2 });
                     this.upgradeText.setText('Dinheiro insuficiente');
                     this.upgradeText.setPosition(this.player.x - 90, this.player.y - 50);
                     this.upgradeText.setVisible(true);
@@ -485,7 +584,7 @@ export class SurvivalGame extends Phaser.Scene {
         this.playPlayerHitAnimation();
 
         // 🔥 Tween piscando
-        this.sound.play("ouch", {volume: 0.15});
+        this.sound.play("ouch", { volume: 0.15 });
 
         this.tweens.add({
             targets: player,
@@ -786,6 +885,7 @@ export class SurvivalGame extends Phaser.Scene {
         }
 
         zombie.setOrigin(0.5);
+        zombie.setDepth(5);
 
         // 🔥 Propriedades comuns
         zombie.hp = zombieHp;
@@ -822,10 +922,12 @@ export class SurvivalGame extends Phaser.Scene {
         const boss = this.physics.add.sprite(x, y, 'boss_down');
         boss.setDisplaySize(48, 48);
         boss.setOrigin(0.5);
+        boss.setDepth(5);
 
         boss.hp = this.zombieBaseHp * 5;
         boss.speed = this.zombieBaseSpeed * 0.8;
         boss.type = "boss";
+
 
         boss.frameToggleTime = 0;
         boss.frameToggleState = false;
@@ -1076,11 +1178,29 @@ export class SurvivalGame extends Phaser.Scene {
         this.physics.add.collider(this.player, this.camadaObjetosColider);
         this.physics.add.collider(this.player, this.camadaLimite);
 
+        this.physics.add.collider(this.zombies, this.camadaLimite);
+        this.physics.add.collider(this.zombies, this.obstacles)
+
+        this.physics.add.collider(
+            this.zombies,
+            this.camadaObjetosColider,
+            null, // Nenhum callback de colisão (só queremos que eles parem)
+            (zombie, tile) => {
+                // Esta função é o FILTRO. Ela decide se a colisão deve acontecer.
+                // Retorna 'true' para colidir, 'false' para ignorar.
+                // Nós queremos que a colisão seja ignorada se o tile tiver a propriedade 'colisao_p'.
+                return !tile.properties.colisao_p;
+            },
+            this
+        );
+
+        // Resto das colisões
         this.physics.add.overlap(this.zombies, this.player, this.handlePlayerHit, null, this);
         this.physics.add.overlap(this.bullets, this.zombies, this.hitZombie, null, this);
         this.physics.add.collider(this.player, this.obstacles);
         this.physics.add.collider(this.zombies, this.obstacles);
         this.physics.add.collider(this.bullets, this.obstacles, (bullet) => bullet.destroy());
+        this.physics.add.collider(this.bullets, this.camadaObjetosColider, (bullet) => bullet.destroy());
     }
 
     // 9. Configuração de Tiro (mouse)

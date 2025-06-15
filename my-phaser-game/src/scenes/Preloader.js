@@ -46,6 +46,7 @@ export class Preloader extends Scene {
         //Cerragar json mapa
         this.load.image("tilesRefe", "mapa/Zombie_Tileset_Reference.png");
         this.load.image("tilesPeks", "mapa/Perks.png");
+        this.load.image("tilesArmas", "mapa/armas_parede.png");
         this.load.tilemapTiledJSON("map", "mapa/map01.json");
 
         //Imagens do Zombie Tank

@@ -24,7 +24,7 @@ const config = {
         default: 'arcade', // Define o tipo de física usada
         arcade: {
             gravity: { y: 0 }, // Sem gravidade, pois o jogador se move livremente
-            debug: true // Se true, mostra os contornos dos objetos físicos
+            debug: false // Se true, mostra os contornos dos objetos físicos
         }
     },
     scene: [Boot, Preloader, MainMenu, SurvivalGame, GameOver, Cutscene]
