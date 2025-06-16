@@ -4,7 +4,7 @@ export class SurvivalGame extends Phaser.Scene {
     // 1. Construtor da classe
     constructor() {
         super("SurvivalGame");
-        this.initialPlayerMaxHp = 4; // Vida máxima inicial do jogador
+        this.initialPlayerMaxHp = 5; // Vida máxima inicial do jogador
         this.playerMaxHp = this.initialPlayerMaxHp; // Vida máxima atual do personagem
         this.playerHp = this.playerMaxHp; // Vida inicial do personagem
         this.playerDamage = 1; // Dano base do jogador
@@ -140,11 +140,11 @@ export class SurvivalGame extends Phaser.Scene {
         this.createInputs();
         this.createGroups();
         this.createObstacles();
-        this.createUI(); // Cria elementos da UI
         this.createUpgradeAreas(); // Cria áreas de perks
         this.createWeaponAreas(); // Cria áreas de armas
         this.createUpgradeInput(); // Escuta inputs para perks
         this.createWeaponInput(); // Escuta inputs para armas
+        this.createUI(); // Cria elementos da UI
 
         // Configuração de colisões
         this.setupCollisions();
@@ -244,45 +244,46 @@ export class SurvivalGame extends Phaser.Scene {
 
         // 🔳 Caixa de fundo menor
         this.uiBg = this.add
-            .rectangle(0, 0, 160, 80, 0x000000, 0.6)
+            .rectangle(0, 0, 120, 75, 0x000000, 0.8)
             .setOrigin(0, 0)
             .setDepth(1000);
         this.uiBg.setStrokeStyle(2, 0x800000);
 
         const textStyle = {
             fontSize: "12px",
-            fontFamily: "Pixellari",
+            fontFamily: "Arial",
             color: "#ffffff",
             stroke: "#000000",
             strokeThickness: 2,
         };
 
-        // 🧟 Round
+        //  Round
         this.roundText = this.add
             .text(0, 0, `🧟 ${this.round}`, textStyle)
             .setOrigin(0, 0)
             .setDepth(1000);
 
-        // 🎯 Pontuação
+        //  Pontuação
         this.scoreText = this.add
             .text(0, 0, `🎯 ${this.score}`, textStyle)
             .setOrigin(0, 0)
             .setDepth(1000);
 
-        // 💰 Ouro
+        //  Ouro
         this.moneyText = this.add
             .text(0, 0, `💰 ${this.money}`, { ...textStyle, color: "#ffff00" })
             .setOrigin(0, 0)
             .setDepth(1000);
 
-        // 🔫 Arma atual
-        this.weaponText = this.add
-            .text(
-                0,
-                0,
-                `🔫 ${this.weapons[this.currentWeaponIndex].type}`,
-                textStyle
-            )
+        // Fundo da barra (preto)
+        this.healthBarBg = this.add
+            .rectangle(100, 120, 54, 12, 0x000000)
+            .setOrigin(0, 0)
+            .setDepth(1000);
+
+        // Barra de vida (vermelha)
+        this.healthBar = this.add
+            .rectangle(0, 0, 52, 10, 0xff0000)
             .setOrigin(0, 0)
             .setDepth(1000);
 
@@ -341,6 +342,7 @@ export class SurvivalGame extends Phaser.Scene {
     //Funcao para Hud de estaticas seguir a visao do player
     updateUIPosition() {
         const cam = this.cameras.main;
+        const zoom = 3.5;
 
         const offsetX = cam.midPoint.x - cam.displayWidth / 2 + 10;
         const offsetY = cam.midPoint.y - cam.displayHeight / 2 + 10;
@@ -349,7 +351,20 @@ export class SurvivalGame extends Phaser.Scene {
         this.roundText.setPosition(offsetX + 8, offsetY + 6);
         this.scoreText.setPosition(offsetX + 8, offsetY + 22);
         this.moneyText.setPosition(offsetX + 8, offsetY + 38);
-        this.weaponText.setPosition(offsetX + 8, offsetY + 54);
+
+        const barWidth = 150 / zoom;
+        const barHeight = 20 / zoom;
+
+        // Fundo da barra
+        this.healthBarBg.setPosition(offsetX + 39 / zoom, offsetY + 210 / zoom);
+        this.healthBarBg.setSize(barWidth + 2 / zoom, barHeight + 2 / zoom);
+
+        // Barra de vida proporcional
+        this.healthBar.setPosition(offsetX + 40 / zoom, offsetY + 211 / zoom);
+        this.healthBar.setSize(
+            barWidth * (this.playerHp / this.playerMaxHp),
+            barHeight
+        );
     }
 
     createUpgradeAreas() {
