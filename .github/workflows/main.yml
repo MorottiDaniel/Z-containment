@@ -15,21 +15,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4 # Atualizado para v4
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4 # Atualizado para v4
+        uses: actions/setup-node@v4
         with:
           node-version: 18
 
       - name: Install dependencies
+        # AQUI: Dizemos para o comando rodar dentro da pasta 'docs'
+        working-directory: ./docs
         run: npm install
 
       - name: Build project
+        # AQUI: O build também roda dentro da pasta 'docs'
+        working-directory: ./docs
         run: npm run build
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3 # Atualizado para v3
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # AQUI: O resultado do build estará em 'docs/dist'
+          path: ./docs/dist
 
   deploy:
     needs: build
@@ -40,4 +47,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4 # Atualizado para v4
+        uses: actions/deploy-pages@v4
