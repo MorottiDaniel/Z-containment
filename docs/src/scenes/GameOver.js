@@ -30,7 +30,7 @@ export class GameOver extends Scene {
 
         // Botão Retry
         const retryButton = this.add
-            .text(960, 800, "RESTAR", { // Posição Y ajustada
+            .text(960, 800, "RESETAR", { // Posição Y ajustada
                 fontSize: "28px",
                 fontFamily: "Pixellari",
                 backgroundColor: "#800000",
