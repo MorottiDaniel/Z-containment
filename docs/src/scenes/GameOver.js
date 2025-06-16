@@ -5,14 +5,14 @@ export class GameOver extends Scene {
         super("GameOver"); // Nome da cena
     }
 
-    // A CORREÇÃO ESTÁ AQUI
     init(data) {
         // Recebe os dados da cena SurvivalGame
+        this.isGameRunning = false;  // Para de contar o tempo
         this.score = data.score || 0;
         this.round = data.round || 1;
         this.money = data.money || 0;
         this.timeSurvived = data.timeSurvived || 0;
-        this.zombiesKilled = data.zombiesKilled || 0; // <-- LINHA CORRIGIDA
+        this.zombiesKilled = data.zombiesKilled || 0;
     }
 
     create() {
@@ -21,7 +21,7 @@ export class GameOver extends Scene {
 
         // Formata o tempo em minutos e segundos
         const minutes = Math.floor(this.timeSurvived / 60);
-        const seconds = this.timeSurvived % 60;
+       const seconds = (this.timeSurvived % 60).toFixed(1);
         const formattedTime = `${minutes}m ${seconds}s`;
 
         // Fundo
@@ -67,7 +67,7 @@ export class GameOver extends Scene {
             })
             .setOrigin(0.5);
 
-        // Caixa das Estatisticas (aumentei a altura para caber a nova linha)
+        // Caixa das Estatisticas 
         const statsBg = this.add.rectangle(960, 500, 550, 320, 0x000000, 0.6); // Altura de 260 para 320, largura de 500 para 550
         statsBg.setStrokeStyle(4, 0x800000);
 
@@ -94,7 +94,7 @@ export class GameOver extends Scene {
             })
             .setOrigin(0.5);
 
-        // << NOVA LINHA ADICIONADA >>
+        
         this.add
             .text(960, 520, `Zumbis Mortos: ${this.zombiesKilled}`, {
                 fontSize: "32px",
@@ -103,7 +103,7 @@ export class GameOver extends Scene {
             .setOrigin(0.5);
 
         this.add
-            .text(960, 560, `Tempo Sobrevivido: ${formattedTime}`, { // Posição Y ajustada
+            .text(960, 560, `Tempo Sobrevivido: ${formattedTime}`, { 
                 fontSize: "32px",
                 color: "#ffffff",
             })
