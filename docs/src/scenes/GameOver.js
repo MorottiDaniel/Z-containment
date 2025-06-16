@@ -5,12 +5,14 @@ export class GameOver extends Scene {
         super("GameOver"); // Nome da cena
     }
 
+    // A CORREÇÃO ESTÁ AQUI
     init(data) {
         // Recebe os dados da cena SurvivalGame
         this.score = data.score || 0;
         this.round = data.round || 1;
         this.money = data.money || 0;
         this.timeSurvived = data.timeSurvived || 0;
+        this.zombiesKilled = data.zombiesKilled || 0; // <-- LINHA CORRIGIDA
     }
 
     create() {
@@ -28,7 +30,7 @@ export class GameOver extends Scene {
 
         // Botão Retry
         const retryButton = this.add
-            .text(960, 750, "RESTAR", {
+            .text(960, 800, "RESTAR", { // Posição Y ajustada
                 fontSize: "28px",
                 fontFamily: "Pixellari",
                 backgroundColor: "#800000",
@@ -57,15 +59,15 @@ export class GameOver extends Scene {
         });
 
         // Texto do rodape do botao retry
-         this.add
-            .text(960, 790, "Tente Novamente...", {
+        this.add
+            .text(960, 840, "Tente Novamente...", { // Posição Y ajustada
                 fontSize: "17px",
                 color: "#888",
             })
             .setOrigin(0.5);
 
-        // Caixa das Estatisticas
-        const statsBg = this.add.rectangle(960, 480, 500, 260, 0x000000, 0.6);
+        // Caixa das Estatisticas (aumentei a altura para caber a nova linha)
+        const statsBg = this.add.rectangle(960, 500, 550, 320, 0x000000, 0.6); // Altura de 260 para 320, largura de 500 para 550
         statsBg.setStrokeStyle(4, 0x800000);
 
         // Estatisticas
@@ -76,8 +78,9 @@ export class GameOver extends Scene {
             })
             .setOrigin(0.5);
 
+        // Posições Y ajustadas para melhor espaçamento
         this.add
-            .text(960, 430, `Pontos: ${this.score}`, {
+            .text(960, 440, `Pontos: ${this.score}`, {
                 fontSize: "32px",
                 color: "#ffffff",
             })
@@ -90,8 +93,16 @@ export class GameOver extends Scene {
             })
             .setOrigin(0.5);
 
+        // << NOVA LINHA ADICIONADA >>
         this.add
-            .text(960, 520, `Tempo Sobrevivido: ${formattedTime}`, {
+            .text(960, 520, `Zumbis Mortos: ${this.zombiesKilled}`, {
+                fontSize: "32px",
+                color: "#ffffff",
+            })
+            .setOrigin(0.5);
+
+        this.add
+            .text(960, 560, `Tempo Sobrevivido: ${formattedTime}`, { // Posição Y ajustada
                 fontSize: "32px",
                 color: "#ffffff",
             })
