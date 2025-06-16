@@ -27,6 +27,8 @@ export class SurvivalGame extends Phaser.Scene {
                 fireRate: 500,
                 spread: 0,
                 bulletSpeed: 500,
+                displayWidth: 20,   // ADICIONADO: Largura de exibição para a pistola
+                displayHeight: 10,  // ADICIONADO: Altura de exibição para a pistola
             },
         ]; // Arma inicial
         this.currentWeaponIndex = 0; // Índice da arma atual equipada
@@ -34,6 +36,7 @@ export class SurvivalGame extends Phaser.Scene {
         this.playerBaseSpeed = 120; // Velocidade base do jogador
         this.playerCurrentSpeed = 120; // Velocidade atual do jogador
        
+        this.playerWeaponSprite = null; // ADICIONADO: Propriedade para o sprite visual da arma do jogador
 
         // PROPRIEDADES PARA REGENERAÇÃO DE VIDA
         this.lastHitTime = 0;
@@ -77,6 +80,8 @@ export class SurvivalGame extends Phaser.Scene {
                 fireRate: 500,
                 spread: 0,
                 bulletSpeed: 500,
+                displayWidth: 20,   // ADICIONADO: Largura de exibição para a pistola
+                displayHeight: 10,  // ADICIONADO: Altura de exibição para a pistola
             },
         ];
         this.currentWeaponIndex = 0;
@@ -127,6 +132,11 @@ export class SurvivalGame extends Phaser.Scene {
             );
             this.createPlayer(100, 100);
         }
+        
+        // ADICIONADO: Criação do sprite da arma do jogador
+        this.playerWeaponSprite = this.add.sprite(this.player.x, this.player.y, 'weapon_pistol_right'); // Começa com a pistola para a direita
+        this.playerWeaponSprite.setDepth(this.player.depth + 1); // Garante que a arma apareça acima do jogador
+        this.updatePlayerWeaponSprite(); // Chama para posicionar e rotacionar corretamente a arma inicialmente
 
         this.createInputs();
         this.createGroups();
@@ -159,6 +169,7 @@ export class SurvivalGame extends Phaser.Scene {
                     this.currentWeaponIndex =
                         (this.currentWeaponIndex - 1 + numWeapons) % numWeapons;
                 }
+                this.updatePlayerWeaponSprite(); // ADICIONADO: Atualiza a visualização da arma ao trocar com a roda do mouse
             }
         );
 
@@ -507,6 +518,8 @@ export class SurvivalGame extends Phaser.Scene {
                             fireRate: 100,
                             spread: 5,
                             bulletSpeed: 600,
+                            displayWidth: 40,    // ADICIONADO: Propriedades de exibição
+                            displayHeight: 20,   // ADICIONADO: Propriedades de exibição
                         },
                         shotgun: {
                             type: "shotgun",
@@ -514,6 +527,8 @@ export class SurvivalGame extends Phaser.Scene {
                             fireRate: 800,
                             spread: 10,
                             bulletSpeed: 400,
+                            displayWidth: 30,    // ADICIONADO: Propriedades de exibição
+                            displayHeight: 15,   // ADICIONADO: Propriedades de exibição
                         },
                         rifle: {
                             type: "rifle",
@@ -521,6 +536,8 @@ export class SurvivalGame extends Phaser.Scene {
                             fireRate: 200,
                             spread: 2,
                             bulletSpeed: 700,
+                            displayWidth: 35,    // ADICIONADO: Propriedades de exibição
+                            displayHeight: 12,   // ADICIONADO: Propriedades de exibição
                         },
                         sniper: {
                             type: "sniper",
@@ -528,6 +545,8 @@ export class SurvivalGame extends Phaser.Scene {
                             fireRate: 1500,
                             spread: 0,
                             bulletSpeed: 1000,
+                            displayWidth: 45,    // ADICIONADO: Propriedades de exibição
+                            displayHeight: 10,   // ADICIONADO: Propriedades de exibição
                         },
                     }[area.weaponType];
                     this.sound.play("gunload", { volume: 0.2 });
@@ -546,6 +565,7 @@ export class SurvivalGame extends Phaser.Scene {
                             `Arma ${area.weaponType} substituiu ${oldWeaponType}!`
                         );
                     }
+                    this.updatePlayerWeaponSprite(); // ADICIONADO: Atualiza a visualização da arma após a compra
                 } else {
                     this.showTemporaryMessage("Dinheiro insuficiente", "error");
                 }
@@ -687,7 +707,7 @@ export class SurvivalGame extends Phaser.Scene {
             const bullet = this.add.rectangle(
                 this.player.x,
                 this.player.y,
-                8,
+                3,
                 3,
                 0xffff00
             );
@@ -748,6 +768,22 @@ export class SurvivalGame extends Phaser.Scene {
 
             this.lastHitTime = this.time.now;
             this.showTemporaryMessage("Você reviveu, mas perdeu o perk!");
+
+            // ADICIONADO: Reseta a arma para a pistola e atualiza o visual
+            this.weapons = [
+                {
+                    type: "pistol",
+                    damage: 1,
+                    fireRate: 500,
+                    spread: 0,
+                    bulletSpeed: 500,
+                    displayWidth: 20,
+                    displayHeight: 10,
+                },
+            ];
+            this.currentWeaponIndex = 0;
+            this.updatePlayerWeaponSprite(); // Atualiza o sprite da arma para a pistola
+
             return;
         }
 
@@ -776,22 +812,54 @@ export class SurvivalGame extends Phaser.Scene {
     }
 
     addPerkIcon(perkKey) {
-        const iconKey = {
-            forca: "perk_forca",
-            reviver: "perk_reviver",
-            resistencia: "perk_resistencia",
-            velocidade: "perk_velocidade",
-        }[perkKey];
-        if (!iconKey) return;
-        const icon = this.add
-            .image(
-                this.perkIconStartX + this.perkIcons.length * 40,
-                this.perkIconStartY,
-                iconKey
-            )
-            .setScrollFactor(0)
-            .setDisplaySize(32, 32);
-        this.perkIcons.push(icon);
+    const iconKey = {
+        forca: "perk_forca",
+        reviver: "perk_reviver",
+        resistencia: "perk_resistencia",
+        velocidade: "perk_recarga",
+    }[perkKey];
+    if (!iconKey) return;
+    const icon = this.add
+        .image(
+            this.perkIconStartX + this.perkIcons.length * 40,
+            this.perkIconStartY,
+            iconKey
+        )
+        .setScrollFactor(0)
+        .setDisplaySize(32, 32)
+        .setDepth(1001); // <--- Adicione esta linha com uma profundidade maior que os outros elementos do HUD
+    this.perkIcons.push(icon);
+}
+
+    // ADICIONADO: Função para atualizar o sprite da arma do jogador
+    // Esta função controla a textura, origem e rotação da arma.
+    updatePlayerWeaponSprite(weaponDirection = '_right') {
+        if (!this.playerWeaponSprite || !this.player) return;
+
+        const currentWeapon = this.weapons[this.currentWeaponIndex];
+        const pointer = this.input.activePointer;
+
+        // Calcula o ângulo em relação ao mouse
+        const angle = Phaser.Math.Angle.Between(
+            this.player.x,
+            this.player.y,
+            pointer.worldX,
+            pointer.worldY
+        );
+
+        // Seleciona a textura com base na direção determinada no update()
+        const textureKey = 'weapon_' + currentWeapon.type + weaponDirection;
+        this.playerWeaponSprite.setTexture(textureKey);
+        this.playerWeaponSprite.setDisplaySize(currentWeapon.displayWidth, currentWeapon.displayHeight);
+
+        // Define a origem com base na direção da imagem e aplica a rotação compensada
+        if (weaponDirection === '_left') {
+            this.playerWeaponSprite.setOrigin(0.9, 0.5); // Ajusta o ponto de rotação para a esquerda
+            this.playerWeaponSprite.rotation = angle - Math.PI; // Inverte a rotação para virar para a esquerda
+        } else { // weaponDirection === '_right'
+            this.playerWeaponSprite.setOrigin(0.1, 0.5); // Ajusta o ponto de rotação para a direita
+            this.playerWeaponSprite.rotation = angle; // Rotação normal
+        }
     }
 
     // 5. Funções de Atualização
@@ -808,6 +876,29 @@ export class SurvivalGame extends Phaser.Scene {
         this.checkUpgradeAreaOverlap();
         this.checkWeaponAreaOverlap();
         
+        // ADICIONADO: Lógica para atualizar a posição e rotação do sprite da arma do jogador
+        if (this.playerWeaponSprite && this.player) {
+            const offset = 1; // Distância da arma do centro do jogador (ajuste conforme necessário)
+            const pointer = this.input.activePointer;
+            const angle = Phaser.Math.Angle.Between(
+                this.player.x,
+                this.player.y,
+                pointer.worldX,
+                pointer.worldY
+            );
+
+            // Posiciona o sprite da arma em relação ao jogador e ao mouse
+            this.playerWeaponSprite.x = this.player.x + Math.cos(angle) * offset;
+            this.playerWeaponSprite.y = this.player.y + Math.sin(angle) * offset;
+
+            // Determina a direção da arma com base na posição do mouse em relação ao jogador
+            let weaponDirection = '_right';
+            if (pointer.worldX < this.player.x) {
+                weaponDirection = '_left';
+            }
+            // Chama a função para atualizar a textura e rotação da arma
+            this.updatePlayerWeaponSprite(weaponDirection);
+        }
     }
 
     updateUI() {
@@ -1067,7 +1158,6 @@ export class SurvivalGame extends Phaser.Scene {
         if (!zombie || !zombie.active) return;
         bullet.destroy();
         zombie.hp -= this.weapons[this.currentWeaponIndex].damage;
-        this.money += 5;
         if (zombie.hp > 0) {
             this.playZombieHitAnimation(zombie, zombie.type);
             this.tweens.add({
@@ -1079,7 +1169,7 @@ export class SurvivalGame extends Phaser.Scene {
         } else {
             this.killZombie(zombie, zombie.type);
             this.score += 100;
-            this.money += 100;
+            this.money += 80;
         }
     }
 
