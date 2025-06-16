@@ -214,6 +214,23 @@ export class Preloader extends Scene {
         this.load.audio("error", "audio/error.mp3");
         this.load.audio("gunload", "audio/gunload.mp3");
         this.load.audio("upgrade", "audio/upgrade.mp3");
+
+        // --- ARMAMENTO (Sprites Visíveis na mão do player) ---
+        // AGORA CARREGANDO AS VERSÕES '_right' e '_left' de cada arma
+        this.load.image('weapon_pistol_right', 'weapons/pistol_sprite_right.png');
+        this.load.image('weapon_pistol_left', 'weapons/pistol_sprite_left.png');
+
+        this.load.image('weapon_minigun_right', 'weapons/minigun_sprite_right.png');
+        this.load.image('weapon_minigun_left', 'weapons/minigun_sprite_left.png');
+
+        this.load.image('weapon_shotgun_right', 'weapons/shotgun_sprite_right.png');
+        this.load.image('weapon_shotgun_left', 'weapons/shotgun_sprite_left.png');
+
+        this.load.image('weapon_rifle_right', 'weapons/rifle_sprite_right.png');
+        this.load.image('weapon_rifle_left', 'weapons/rifle_sprite_left.png');
+
+        this.load.image('weapon_sniper_right', 'weapons/sniper_sprite_right.png');
+        this.load.image('weapon_sniper_left', 'weapons/sniper_sprite_left.png');
     }
 
     create() {
