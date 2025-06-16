@@ -685,7 +685,7 @@ export class SurvivalGame extends Phaser.Scene {
         if (this.roundZombieSpawner) this.roundZombieSpawner.destroy();
         this.round++;
         console.log(`Iniciando Round ${this.round}`);
-        if (this.round > 1) { this.zombieBaseHp += 1; this.zombieBaseSpeed += 5; }
+        if (this.round > 1) { this.zombieBaseHp += 1; this.zombieBaseSpeed += 1; }
         this.zombiesKilledThisRound = 0;
         this.zombiesSpawnedThisRound = 0;
         this.zombiesToSpawnForRound = 12 * Math.pow(2, this.round - 1);
