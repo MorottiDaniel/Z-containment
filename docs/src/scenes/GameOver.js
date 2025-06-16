@@ -16,6 +16,7 @@ export class GameOver extends Scene {
     }
 
     create() {
+        this.input.setDefaultCursor('default');
         this.sound.play("gameOverMusic", { volume: 0.3 });
 
         // Formata o tempo em minutos e segundos

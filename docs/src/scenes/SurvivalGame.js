@@ -180,7 +180,7 @@ export class SurvivalGame extends Phaser.Scene {
     }
 
     createUI() {
-        this.uiBg = this.add.rectangle(0, 0, 150, 75, 0x000000, 0.8)
+        this.uiBg = this.add.rectangle(0, 0, 150, 75, 0x000000, 0.4)
             .setOrigin(0, 0).setDepth(1000).setStrokeStyle(2, 0x800000);
 
         const textStyle = { fontSize: "12px", fontFamily: "Arial", color: "#ffffff", stroke: "#000000", strokeThickness: 2 };
