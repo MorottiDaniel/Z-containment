@@ -3,15 +3,17 @@
 Z Containment é um jogo de sobrevivência em 2D desenvolvido com [Phaser 3](https://phaser.io/). O jogador controla um personagem fixo no centro da tela, enfrentando hordas de zumbis que surgem ao redor e se aproximam. O objetivo é sobreviver o máximo possível, enfrentando desafios progressivos enquanto tenta escapar da ameaça crescente.
 
 ## 🎯 Jogue agora no navegador
-https://MorottiDaniel.github.io/Z-containment/
+Acesse o link https://MorottiDaniel.github.io/Z-containment/
 
 ## 🎲 Funcionalidades Principais
 
-- ⚔️ Disparo com diferentes armas e upgrades do personagem
-- 🧟‍♂️ Geração e movimentação de zumbis com diferentes características
-- 💀 Sistema de rounds com dificuldade crescente
-- ❤️ Vida do jogador com 5 corações e sistema de pontos
-- 🕹️ Movimentação com teclas WASD
+- ⚔️ Sistema de disparo com diferentes armas, melhorias e upgrades
+- 🧟‍♂️ IA de zumbis com movimentação, perseguição e escalonamento de dificuldade
+- 💀 Sistema de rounds progressivos, cada vez mais desafiadores
+- ❤️ Sistema de vida e HUD dinâmico
+- 🕹️ Movimentação fluida com teclas WASD
+- 🎯 Sistema de mira com cursor personalizado
+- 💰 Sistema de economia para comprar melhorias e armas
 
 ## 🛠️ Tecnologias Utilizadas
 
